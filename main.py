@@ -16,21 +16,21 @@ import regex
 # [ ] 🔨 🟥 🟩
 # [X] 🪓 🟥 🟥
 # [X] 🏹  🟦 🟩
-# [ ] 🧤 🟦
-# [ ] 👑 🟨
-# [ ] 💍 🟨
+# [X] 🧤 🟦
+# [X] 👑 🟨
+# [X] 💍 🟨
 # [ ] Add monsters to specific locations
 # [ ] Only move past location if there are no monsters
 # [ ] GHOSTS in RUINS
 # [X] ZOMBIE: On hit gets heart back
-# [ ] FROG 🐸
+# [X] FROG 🐸
 # [ ] SPIDER 🕷️
-# [ ] BATS 🦇
+# [X] BATS 🦇
 # [ ] SKELETON
-# [ ] TROLL
-# [ ] ZOMBIE only green dice
+# [X] TROLL
+# [X] ZOMBIE only green dice
 # [ ] SHARK
-# [ ] Mermaid
+# [ ] Mermaid (shield = damage)
 # [ ] EVIL SORCERER 🧙
 # [ ] Princess 👸 3x 🔮
 
@@ -70,12 +70,16 @@ import sys
 I_EMPTY = "_"
 I_SWORD = "🗡️"
 I_SHIELD = "🛡️"
+I_GLOVES = "🧤"
 I_SHOE = "🥾"
 I_COIN = "🟡"
 I_POTION = "🧪"
 I_BOMB = "💣"
 I_BOW = "🏹"
 I_BATTLE_AXE = "🪓"
+I_RING = "💍"
+I_CROWN = "👑"
+
 
 E_OCTOPUS = "🐙"
 E_SNAKE = "🐍"
@@ -83,7 +87,8 @@ E_DRAGON = "🐉"
 E_RAT = "🐀"
 E_GHOST = "👻"
 E_ZOMBIE = "🧟‍️"
-
+E_BAT = "🦇"
+E_FROG = "🐸"
 E_TROLL = "🧌"
 E_VAMPIRE = "🧛"
 E_DEMON = "👹"
@@ -100,8 +105,21 @@ S_HEART_EMPTY = "🖤"
 S_SKULL = "💀"
 S_HIT = "💥"
 S_MISS = "💨"
+S_MAGIC = "🔥"
 S_MAGIC_MISS = "✨"
 
+DEFAULT_ITEM_EFFECT = D_GREEN * 2
+ITEM_EFFECTS = {
+    I_SWORD: D_RED,
+    I_GLOVES: D_BLUE,
+    I_RING: D_YELLOW,
+
+    I_BOW: (D_BLUE + D_GREEN),
+
+    I_BATTLE_AXE: (D_RED * 2),
+    I_SHIELD: (2 * D_BLUE),
+    I_CROWN: (D_YELLOW * 2),
+}
 
 L_CASTLE = "🏰 Castle"
 L_FOREST = "🌲 Forest"
@@ -128,14 +146,32 @@ def pause(text):
 
 
 clear()
-print("PAWELS ADVENTURE GAME")
+print("""
+ _______  _______           _______  _  _     _______    _______  _______  _______  _______ _________
+(  ____ )(  ___  )|\     /|(  ____ \( \( )   (  ____ \  (  ____ \(  ____ )(  ____ \(  ___  )\__   __/
+| (    )|| (   ) || )   ( || (    \/| (|/    | (    \/  | (    \/| (    )|| (    \/| (   ) |   ) (   
+| (____)|| (___) || | _ | || (__    | |      | (_____   | |      | (____)|| (__    | (___) |   | |   
+|  _____)|  ___  || |( )| ||  __)   | |      (_____  )  | | ____ |     __)|  __)   |  ___  |   | |   
+| (      | (   ) || || || || (      | |            ) |  | | \_  )| (\ (   | (      | (   ) |   | |   
+| )      | )   ( || () () || (____/\| (____/\/\____) |  | (___) || ) \ \__| (____/\| )   ( |   | |   
+|/       |/     \|(_______)(_______/(_______/\_______)  (_______)|/   \__/(_______/|/     \|   )_(   
+                                                                                                     
+             _______  ______            _______  _       _________          _______  _______         
+            (  ___  )(  __  \ |\     /|(  ____ \( (    /|\__   __/|\     /|(  ____ )(  ____ \        
+            | (   ) || (  \  )| )   ( || (    \/|  \  ( |   ) (   | )   ( || (    )|| (    \/        
+            | (___) || |   ) || |   | || (__    |   \ | |   | |   | |   | || (____)|| (__            
+            |  ___  || |   | |( (   ) )|  __)   | (\ \) |   | |   | |   | ||     __)|  __)           
+            | (   ) || |   ) | \ \_/ / | (      | | \   |   | |   | |   | || (\ (   | (              
+            | )   ( || (__/  )  \   /  | (____/\| )  \  |   | |   | (___) || ) \ \__| (____/\        
+            |/     \|(______/    \_/   (_______/|/    )_)   )_(   (_______)|/   \__/(_______/        
+""")
 name = input("What is the name of the hero? ")
 if len(name) > 20:
     name = name[:20]
     pause(f"That's a long name. I will call you {name}")
 
 print("Welcome", name, "on your great adventure!")
-backpack = f"{I_POTION}{I_COIN * 2}"
+backpack = f"{I_POTION}{I_COIN * 2}{I_BATTLE_AXE}{I_CROWN}{I_SHIELD}"
 backback_size = LEVELS['backpack'][0]
 equipment = ""
 location = L_CASTLE
@@ -146,9 +182,10 @@ level = 1
 
 prices = {
     I_SWORD: 4,
-    I_BOW: 6,
+    I_GLOVES: 4,
+    I_BOW: 7,
     I_BATTLE_AXE: 10,
-    I_SHIELD: 4,
+    I_SHIELD: 10,
     I_SHOE: 1,
     I_BOMB: 3,
     I_POTION: 2,
@@ -178,6 +215,8 @@ def __type_damage_only(rolled_dice: list, only_type: list) -> int:
 def _magic_damage_only(rolled_dice: list) -> int:
     return __type_damage_only(rolled_dice, [D_YELLOW])
 
+def _no_magic_damage(rolled_dice: list) -> int:
+    return __type_damage_only(rolled_dice, [D_GREEN, D_BLUE, D_RED])
 
 def _green_damage_only(rolled_dice: list) -> int:
     return __type_damage_only(rolled_dice, [D_GREEN])
@@ -186,10 +225,14 @@ monsters = {
     # Purple Dice, Black Dice, Health, XP, LOOT, damage_callback
     E_RAT: (1, 0, 1, 50, I_COIN, _default_damage, ""),
     E_SNAKE: (3, 0, 2, 100, I_COIN * 1, _default_damage, ""),
+    E_BAT: (2, 1, 3, 150, I_COIN * 1, _default_damage, ""),
+    E_FROG: (1, 1, 5, 150, I_COIN * 1, _default_damage, ""),
+    E_TROLL: (3, 0, 10, 250, I_COIN * 4, _default_damage, ""),
     E_OCTOPUS: (2, 0, 3, 200, I_COIN * 2, _default_damage, ""),
-    E_GHOST: (0, 2, 3, 300, f"{I_POTION * 2}", _magic_damage_only, f"Only {D_YELLOW} magic is effective against Ghosts!"),
-    E_ZOMBIE: (4, 0, 4, 600, f"{I_POTION * 2}", _green_damage_only, f"Only {D_GREEN} basic attacks are effective against Zombies!"),
-    E_DRAGON: (2, 2, 15, 2500, f"{I_COIN * 8}{I_BOMB}", _default_damage, ""),
+    E_GHOST: (0, 2, 3, 300, f"{I_POTION * 1}", _magic_damage_only, f"Only {D_YELLOW} magic is effective against Ghosts!"),
+    E_ZOMBIE: (4, 0, 4, 600, f"{I_COIN * 3}", _green_damage_only, f"Only {D_GREEN} basic attacks are effective against Zombies!"),
+    E_DRAGON: (5, 5, 15, 2500, f"{I_COIN * 6}{I_CROWN}", _no_magic_damage, f"Dragon is immune to {S_MAGIC}"),
+    # E_VAMPIRE {I_RING}
 }
 
 
@@ -198,7 +241,7 @@ DICE = {
     D_GREEN:  f"{I_SWORD * 2}{I_SHIELD * 2}  ",
     D_RED:    f"{I_SWORD * 3}{I_SHIELD * 1}  ",
     D_BLUE:   f"{I_SWORD * 1}{I_SHIELD * 3}  ",
-    D_YELLOW: f"{I_SWORD * 3}{I_SHIELD * 3}",
+    D_YELLOW: f"{I_SWORD * 2}{I_SHIELD * 3} ",
     D_PURPLE: f"{I_SWORD * 2}{I_SHIELD * 1}   ",
     D_BLACK:  f"{I_SWORD * 3}{I_SHIELD * 2} ",
 }
@@ -268,16 +311,9 @@ def fight():
     damage_callback = values[5]
     damage_message = values[6]
 
-    player_dice = D_GREEN * 2
-
-    player_dice += D_RED * backpack.count(I_SWORD)
-
-    player_dice += D_BLUE * backpack.count(I_BOW)
-    player_dice += D_GREEN * backpack.count(I_BOW)
-
-    player_dice += D_RED * backpack.count(I_BATTLE_AXE) * 2
-
-    player_dice += D_BLUE * backpack.count(I_SHIELD)
+    player_dice = DEFAULT_ITEM_EFFECT
+    for item in ITEM_EFFECTS.keys():
+        player_dice += backpack.count(item) * ITEM_EFFECTS[item]
 
     while monster_health > 0 and health > 0:
 
@@ -319,6 +355,8 @@ def fight():
                 player_roll = roll(player_dice)
                 altered, player_roll = damage_callback(player_roll)
                 for die, throw in player_roll:
+                    if die == D_YELLOW:
+                        throw = throw.replace(I_SWORD, S_MAGIC)
                     print(f"{die} {throw}")
 
                 print("MONSTER THROWS:")
@@ -344,7 +382,7 @@ def fight():
                 return
             elif action_text == ACTIONS['potion']:
                 backpack = backpack.replace(I_POTION, "", 1)
-                potion_die = random.choice([D_RED, D_BLUE, D_GREEN])
+                potion_die = random.choice([D_RED, D_BLUE, D_GREEN, D_YELLOW])
                 player_dice += potion_die
                 pause(f"You feel stronger. A {potion_die} was added.")
             elif action_text == ACTIONS['bomb']:
@@ -359,7 +397,16 @@ def fight():
 
 
     if health == 0:
-        pause(f"YOU WERE DEFEATED {S_SKULL}")
+        print("""
+ _______  _______  __   __  _______    _______  __   __  _______  ______   
+|       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  
+|    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  
+|   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ 
+|   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |
+|   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |
+|_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|
+        """)
+        pause(f"{S_SKULL * 3} YOU WERE DEFEATED {S_SKULL * 3}")
         sys.exit(0)
     if monster_health == 0:
         pause(f'THE MONSTER IS DEFEATED. YOU FOUND {monster_loot} AND GAINED {monster_xp} XP')
@@ -375,13 +422,14 @@ options = {
     ],
     L_SHOP: [
         ("Go back to the castle", lambda: goto(L_CASTLE)),
-        (f"{I_SWORD} Buy a sword (Cost: {prices[I_SWORD]})", lambda: buy(I_SWORD)),
-        (f"{I_BOW} Buy a bow (Cost: {prices[I_BOW]})", lambda: buy(I_BOW)),
-        (f"{I_BATTLE_AXE} Buy a battle-axe (Cost: {prices[I_BATTLE_AXE]})", lambda: buy(I_BATTLE_AXE)),
-        (f"{I_SHIELD} Buy a shield (Cost: {prices[I_SHIELD]})", lambda: buy(I_SHIELD)),
-        (f"{I_SHOE} Buy boots (Cost: {prices[I_SHOE]})", lambda: buy(I_SHOE)),
-        (f"{I_BOMB} Buy a bomb (Cost: {prices[I_BOMB]})", lambda: buy(I_BOMB)),
-        (f"{I_POTION} Buy a potion (Cost: {prices[I_POTION]})", lambda: buy(I_POTION)),
+        (f"{I_SWORD} Buy a sword (Effect: {ITEM_EFFECTS[I_SWORD]} Cost: {prices[I_SWORD]})", lambda: buy(I_SWORD)),
+        (f"{I_GLOVES} Buy gloves (Effect: {ITEM_EFFECTS[I_GLOVES]} Cost: {prices[I_GLOVES]})", lambda: buy(I_GLOVES)),
+        (f"{I_BOW} Buy a bow (Effect: {ITEM_EFFECTS[I_BOW]} Cost: {prices[I_BOW]})", lambda: buy(I_BOW)),
+        (f"{I_BATTLE_AXE} Buy a battle-axe (Effect: {ITEM_EFFECTS[I_BATTLE_AXE]} Cost: {prices[I_BATTLE_AXE]})", lambda: buy(I_BATTLE_AXE)),
+        (f"{I_SHIELD} Buy a shield (Effect: {ITEM_EFFECTS[I_SHIELD]} Cost: {prices[I_SHIELD]})", lambda: buy(I_SHIELD)),
+        (f"{I_SHOE} Buy boots (Effect: ??? Cost: {prices[I_SHOE]})", lambda: buy(I_SHOE)),
+        (f"{I_BOMB} Buy a bomb (Effect: {2 * S_HIT} + {S_HIT} to self, Cost: {prices[I_BOMB]})", lambda: buy(I_BOMB)),
+        (f"{I_POTION} Buy a potion (Effect: 1 Random Dice Cost: {prices[I_POTION]})", lambda: buy(I_POTION)),
     ],
     L_FOREST: [
         ("Go back to the castle", lambda: goto(L_CASTLE)),
