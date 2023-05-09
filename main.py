@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import copy
+import json
 import math
 import textwrap
+from pprint import pprint
 
 import regex
 
@@ -8,8 +11,8 @@ import regex
 DEBUG_START_LEVEL = 1
 DEBUG_SHOW_COMPLETE_MAP = False #True
 DEBUG_LARGE_INVENTORY = False #True
-DEBUG_START_PEARL_COUNT = 2
-DEBUG_START_COINS = 20
+DEBUG_START_PEARL_COUNT = 0
+DEBUG_START_COINS = 0
 DEBUG_MONSTERS_CLEARED = False
 DEBUG_BOSSES_CLEARED = False
 
@@ -22,7 +25,7 @@ DEBUG_BOSSES_CLEARED = False
 # [X] Potion: Adds a random dice during fight
 # [X] 💣 Bomb: 2 Damage to Monster + 1 Damage to self
 # [X] 🩹 Heals 3 heart
-# [ ] Limit items in shop
+# [X] Limit items in shop (not needed for most items, due to equip system)
 # [X] Pearls and Wizzard
 # [X] Bug in mines ... wrong monsters?!!
 # XXX[ ] Shoes: One more Move per Turn + Two Shoes = two more moves.
@@ -48,8 +51,9 @@ DEBUG_BOSSES_CLEARED = False
 # [ ] EVIL SORCERER 🧙
 # [ ] Princess 👸 3x 🔮
 # [ ] Scroll to turn all dice into one color
-# [ ] PICKAXE opens Dungeon
-# [ ] Map Position >^<
+# [X] PICKAXE opens Dungeon
+# [X] Map Position >^<
+# [ ] Cave/Mines Story ...
 
 # GOAL:
 # - Defeat Vampire
@@ -105,6 +109,7 @@ I_WAND = "🪄"
 I_SPELLBOOK = "📕"
 I_COFFIN = "⚰️"
 I_PICKAXE = "⛏️"
+I_BUCKET = "🪣"
 I_AMULET = "📿"
 
 I_NOT_DROPABLE = f"{I_COFFIN}{I_PEARL}{I_PICKAXE}{I_AMULET}"
@@ -117,29 +122,31 @@ T_ARMS = 3
 T_FEET = 4
 T_FINGERS = 5
 T_HEAD = 6
-T_BOTH_HANDS = 7
 
 ITEM_TYPES = {
     I_SWORD: [T_L_HAND, T_R_HAND],
     I_SHIELD: [T_R_HAND, T_L_HAND],
     I_GLOVES: [T_ARMS],
     I_SHOES: [T_FEET],
-    I_BOW: [T_BOTH_HANDS],
+    I_BOW: [T_L_HAND, T_R_HAND],
     I_BATTLE_AXE: [T_L_HAND, T_R_HAND],
+    I_PICKAXE: [T_L_HAND, T_R_HAND],
     I_RING: [T_FINGERS],
     I_CROWN: [T_HEAD],
-    I_PEARL: [T_L_HAND, T_R_HAND],
+    I_AMULET: [T_FINGERS],
+    I_BUCKET: [T_HEAD],
+    I_PEARL: [T_FINGERS],
     I_WAND: [T_L_HAND, T_R_HAND],
     I_SPELLBOOK: [T_L_HAND, T_R_HAND]
 }
 
 equiped = [
-    ('l', "🇱 Left Hand", I_SWORD * 3),
-    ('r', "🇷 Right Hand", I_EMPTY * 3),
-    ('a', "🖐️ Arms/Hands", I_EMPTY * 2),
-    ('f', "🦶 Feet", I_EMPTY),
-    ('g', "🫳 Fingers", I_EMPTY),
-    ('h', "🧑 Head", I_EMPTY),
+    ['l', "🇱 Left Hand", ""],
+    ['r', "🇷 Right Hand", ""],
+    ['a', "🖐️ Arms/Hands", ""],
+    ['f', "🦶 Feet", ""],
+    ['j', "🫳 Jewellery", ""],
+    ['h', "🧑 Head", ""],
 ]
 
 E_OCTOPUS = "🐙 OCTOPUS"
@@ -193,14 +200,18 @@ S_INVENTORY = "📦"
 S_MAP = "🗺️"
 S_STATUS = "📜"
 S_DONE = "↩️"
+S_SAVE = "💾⬅️"
+S_LOAD = "💾⤵️"
 
 DEFAULT_ITEM_EFFECT = D_GREEN * 2
 ITEM_EFFECTS = {
     I_SWORD: D_RED,
     I_GLOVES: D_BLUE,
+    I_BUCKET: D_BLUE,
     I_RING: D_YELLOW,
 
     I_BOW: (D_BLUE + D_GREEN),
+    I_PICKAXE: (D_RED + D_GREEN),
 
     I_BATTLE_AXE: (D_RED * 2),
     I_SHIELD: (2 * D_BLUE),
@@ -398,9 +409,10 @@ health = max_health
 xp = LEVELS['xp'][level - 1]
 
 prices = {
-    I_SWORD: 4,
-    I_GLOVES: 4,
-    I_BOW: 7,
+    I_SWORD: 3,
+    I_GLOVES: 3,
+    I_BUCKET: 3,
+    I_BOW: 5,
     I_BATTLE_AXE: 10,
     I_SHIELD: 10,
     I_SHOES: 1,
@@ -476,8 +488,8 @@ def _reduced_to_count(rolled_dice: list, count: int, affect_types: list = [], ef
     return removed_damage, new_result
 
 
-def _reduce_all_damage_to_one(rolled_dice: list):
-    return _reduced_to_count(rolled_dice, 1)
+def _reduce_all_damage_to_two(rolled_dice: list):
+    return _reduced_to_count(rolled_dice, 2)
 
 
 monsters = {
@@ -491,14 +503,14 @@ monsters = {
     E_SPIDER: (0, 4, 4, 200, f"{I_POTION}", _default_damage, ""),
 
     E_SKELETON: (2, 3, 3, 250, f"{I_POTION * 1}", _default_damage, ""),
-    E_ZOMBIE: (2, 2, 5, 350, f"{I_COIN * 1}", _green_damage_only, f"Only {D_GREEN} basic attacks are effective agains zombies"),
-    E_GHOST: (0, 5, 3, 500, f"{I_POTION * 1}", _reduce_all_damage_to_one,
-              f"{S_MISS} Hard to hit. Ghosts only receive the first hit!"),
+    E_ZOMBIE: (3, 1, 4, 350, f"{I_COIN * 1}", _green_damage_only, f"Only {D_GREEN} basic attacks are effective against Zombies"),
+    E_GHOST: (0, 5, 3, 400, f"{I_POTION * 1}", _reduce_all_damage_to_two,
+              f"{S_MISS} Hard to hit. Ghosts only receive the first two hit!"),
 
-    E_SCORPION: (3, 4, 5, 500, f"{I_COIN}", _default_damage, ""),
+    E_SCORPION: (3, 6, 5, 400, f"{I_COIN}", _default_damage, ""),
     E_BAT: (2, 1, 3, 150, I_COIN * 1, _default_damage, ""),
 
-    E_CRAB: (4, 0, 4, 500, f"{I_COIN * 3}", _default_damage, ""),
+    E_CRAB: (4, 7, 7, 500, f"{I_COIN * 3}", _default_damage, ""),
     E_OCTOPUS: (2, 0, 3, 200, I_COIN * 2, _default_damage, ""),
     E_SHARK: (2, 2, 5, 300, f"{I_COIN}", _blue_damage_only, f"Only {D_BLUE} attacks are effective against sharks!"),
 
@@ -508,7 +520,7 @@ monsters = {
 
 
     E_MERMAID: (2, 6, 12, 2500, f"{I_RING}{I_PEARL}", _blue_damage_only, f"Only {D_BLUE} attacks are effective against Mermaids!"),
-    E_VAMPIRE: (0, 5, 8, 2500, f"{I_COIN * 6}{I_PEARL}", _default_damage, ""), # f"Only {D_RED} is effective against Vampires."),
+    E_VAMPIRE: (0, 6, 8, 2500, f"{I_COIN * 6}{I_PEARL}", _default_damage, ""), # f"Only {D_RED} is effective against Vampires."),
     E_DRAGON: (5, 5, 15, 2500, f"{I_COIN * 6}{I_PEARL}", _no_magic_effect, f"Dragon is immune to {D_YELLOW}"),
 
     E_SORCERER: (6, 4, 10, 5000, f"{I_COIN}", _random_damage, _random_damage_message),
@@ -536,7 +548,7 @@ MONSTER_ZONES = {
 BOSS_MONSTER = 1
 MONSTER_CLEARED = {
     L_CASTLE: 5,
-    L_FOREST: 8,
+    L_FOREST: 5,
     L_BRIDGE: 2,
     L_SWAMP: 5,
     L_RUINS: 5,
@@ -552,6 +564,7 @@ MONSTER_CLEARED = {
     L_VULCANO: BOSS_MONSTER,
     L_PORTAL: BOSS_MONSTER,
 }
+BOSSES = (E_VAMPIRE, E_MERMAID, E_DRAGON, E_SORCERER)
 
 
 DICE = {
@@ -564,12 +577,58 @@ DICE = {
 }
 
 QUESTS = {
+    'rats': 0, # 0 - Commander is about to give you money if rats are cleared
+               # 1 - You got the reward
     'monk': 0, # 0 - Not talked to monk
               # 1 - Quest to find brother
               # 2 - Talked to brother
     'ocean': 0,  # 0 - No boss
                 # 1 - Dropped bomb, boss appears
 }
+
+def save():
+    state = {}
+    state['name'] = name
+    state['backpack'] = backpack
+    state['level'] = level
+    state['location'] = location
+    state['visited'] = visited
+    state['health'] = health
+    state['xp'] = xp
+    state['equiped'] = equiped
+    state['QUESTS'] = QUESTS
+    state['MONSTER_CLEARED'] = MONSTER_CLEARED
+
+    with open('kop.sav', 'w') as fh:
+        json.dump(state, fh)
+
+    pause("Game Saved")
+
+def load():
+    print('LOAD"$",8,1')
+    global name, backpack, level, location, visited, health, backback_size, max_health, xp, equiped, QUESTS, MONSTER_CLEARED
+    state = {}
+    with open('kop.sav', 'r') as fh:
+        state = json.load(fh)
+
+    name = state['name']
+    backpack = state['backpack']
+    level = state['level']
+    location = state['location']
+    visited = state['visited']
+    health = state['health']
+    xp = state['xp']
+    # Else we would overwrite labels
+    for i, e in enumerate(state['equiped']):
+        equiped[i][2] = e[2]
+
+    backback_size = LEVELS['backpack'][level - 1]
+    max_health = LEVELS['health'][level - 1]
+    QUESTS = state['QUESTS']
+    MONSTER_CLEARED = state['MONSTER_CLEARED']
+
+    pause("Game Loaded")
+
 
 def increment_quest(name):
     global QUESTS
@@ -618,8 +677,7 @@ Let him know that I am alive and he still ows me three coins from our last gambl
             
 Inside, the Gravedigger looks at you in terror.
 
-"If you are not one of these creatures, you can stay
-a while and listen."
+"If you are not one of these creatures, you can stay a while and listen."
 
 He begins to tell you his story. He introduces himself as Vernal, the gravedigger.
 It seems that a dangerous monster, that only acts at night, is commanding all the undead creatures in this area.
@@ -643,10 +701,9 @@ Vernal has seen it hiding in its lair, somewhere within the tomb. But he does no
         'story': [
             """This must have been a village, not very long ago.
 The ashes of some of the houses are still warm. You look for something
-useful, but there is not much that can be saved.
+useful, but there is not much that can be salvaged.
 
-What is this? A sticky web and cocoons. Are these item remains from
-the people that lived here?
+What is this? A sticky web and cocoons. Are these the remains of the people that lived here?
 
 While inspecting, you hear a high-pitched sound coming closer.
 You expect the worst.
@@ -656,7 +713,7 @@ You expect the worst.
     L_GRAVEYARD: {
         'obstacle': {
             L_GRAVEDIGGER: [
-                f"""A small stonehouse is next to the graveyard. You see a candle lit, but you can not reach it, with all these undead monsters."""
+                f"""A small stonehouse is next to the graveyard. You see a candle lit, but you can not reach it, with all these undead monsters around."""
             ],
             L_TOMB: [
                 f"""In the center of the graveyard, lies a large tomb. The undead seem to be protecting it."""
@@ -669,7 +726,7 @@ You expect the worst.
             """A thick fog surrounds your feet as you enter the village's graveyard.
 The moment you step foot on it - hands break through the graves and undead creatures raise coming for you.
 
-You other structures near by, but how will you reach them?
+You see other structures near by, but how will you reach them?
 """
         ]
     },
@@ -686,7 +743,7 @@ You other structures near by, but how will you reach them?
         ],
         'story': [
             """A dark place of evil. I has barely any light - only some moonlight shining through the crack in the
-ceiling onto the coffin in the middle of the room. But what lies wihin?
+ceiling onto the coffin in the middle of the room. But what lies within?
         
 You amulet clearly points at the coffin. You approach it and slowly open the lid.
 A vampire king is sleeping inside the coffin. What will you do?"""
@@ -726,8 +783,7 @@ The trees look dried out and twisted in pain.
 The deeper you go, the darker it gets. You start to
 hear suspicious sounds. Squeaking and hissing.
 
-There is no safe passage through the forest, without
-ridden it first of beasts.
+There is no safe passage through the forest, without ridden it first of its beasts.
 """
         ]
     },
@@ -738,21 +794,17 @@ ridden it first of beasts.
             ],
         },
         'cleared': [
-            """The last Troll falls off the bridge. The bridge is clear\nfor your passage."""
+            """The last Troll falls off the bridge. The bridge is clear for your passage."""
         ],
         'story': [
-            """The bridge is near. It is the only safe
-way to pass the river. Yet something does not seem right.
+            """The bridge is near. It is the only safe way to pass the river. Yet something does not seem right.
 
-The moment you set foot on it two large shadows emerge 
-from the other side. Their footsteps make the ground shake.
+The moment you set foot on it two large shadows emerge from the other side. Their footsteps make the ground tremble.
 
-Can it be the bridge is guarded by trolls? Indeed, these
-strong but not very clever monsters enter your sight.
+Can it be the bridge is guarded by trolls? Indeed, these strong but not very clever monsters enter your sight.
 
 "You not pass!" screams the first.
-"You come, we eat you!" adds the other. Both look at each 
-other and start to grin.
+"You come, we eat you!" adds the other. Both look at each other and start to grin.
 """
         ]
     },
@@ -769,39 +821,33 @@ other and start to grin.
             ],
         },
         'cleared': [
-            """It seems like all the toads have been defeated. The path is clear."""
+            """It seems like all the monsters have been defeated. The path is clear."""
         ],
         'story': [
           """The endless fields with golden ripe crops have vanished.
 In its place a wet and stinking swamp terrorizes who wants to pass it.
 
-But the smell is the least of your problems. What you fail to see
-is that you are not alone. Large eyes cut through the puddles and 
-observe every of your moves. Quickly, you try to identify item creature
-inhabits these rotten lands. Toads, as large as humans! And who knows
-item other creatures hide here.
+But the smell is the least of your problems. What you fail to see is that you are not alone. Large eyes cut through the puddles and observe every of your moves. You know these creatures! Toads, as large as humans! And who knows which other creatures hide here.
 
-You have to be on you guard if you want to make it through the swamps
-alive.
+You have to be on you guard if you want to make it through the swamps alive.
 """
       ]
     },
     L_DESERT: {
-      'story': [
-          """You clothes dried quickly. The celebration does not hold 
-for long, as the ground gets dry and starts to slowly yield to seemingly
-endless piles of sand.
+        'obstacle': {
+            L_BEACH: [
+                f"""The beach seems near, but the monsters do not let you through."""
+            ],
+        },
+        'cleared': [
+            """The last scorpion is defeated. Maybe it is time to escape the desert."""
+        ],
+        'story': [
+          """You clothes dried quickly. The celebration does not hold for long, as the ground gets dry and starts to slowly yield to seemingly endless piles of sand.
 
-The sky clears and while the sun pierces your skin with its rays of fire
-you start to realize, that you landed in the desert.
+The sky clears and while the sun pierces your skin with its rays of fire you start to realize, that you landed in the desert.
 
-You can not tell where it ends - but strange and spikey poles catch your
-gaze in the distance. As these poles start to move in a random dance,
-you begin to realize that these are not poles, but the deadly tails of
-scorpions. This very special kind, however, is larger than anything
-you have seen before. What kind of dark magic surfaced monsters like 
-these? There is no way, you think, to avoid combat here other than
-turning around.
+You can not tell where it ends - but strange and spikey poles catch your gaze in the distance. As these poles start to move in a random dance, you begin to realize that these are not poles, but the deadly tails of scorpions. This very special kind, however, is larger than anything you have seen before. What kind of dark magic surfaced monsters like these? There is no way, you think, to avoid combat here other than turning around.
 """
       ]
     },
@@ -818,8 +864,7 @@ turning around.
             """The beach is safe now. The remaining crabs are fleeing into the ocean."""
         ],
         'story': [
-            """Finally you start hearing the pleasing concert of waves
-breaking over and over again.
+            """Finally you start hearing the pleasing concert of waves breaking over and over again.
 
 You have reached the beaches. Far ahead you see an ship anchoring at the bay.
 But in order to come closer to the shore, you need to fight your way through monster crabs.
@@ -828,10 +873,8 @@ But in order to come closer to the shore, you need to fight your way through mon
     },
     L_SHOP: {
         'story': [
-            """As you enter the castle's shop, the merchant 
-immediately approaches you.
-Stroking his long beard and mustering you from head to
-toe, he asks:
+            """As you enter the castle's shop, the merchant immediately approaches you.
+Stroking his long beard and mustering you from head to toe, he asks:
 "Yes, yes. What can I do for you?"
 """
         ]
@@ -841,13 +884,11 @@ toe, he asks:
             f"""The tallest building in the center of the castle is an old cathedral.
 The moment you enter you smell herbs and incense. You approach the altar, next to a large well.
 
-The monk comes in from a side door and seeks your contact.
-
+The monk comes in from a side door and seeks your contact. 
 "You must be {name}. The king was expecting you. Yet no one could expect his fate."
 You nod.
 
-"I am Nordil, monk overseeing this holy place. Is it true" he asks, "that you are going to defeat the evil? 
-If so, then please let me heal your wounds."
+"I am Nordil, monk overseeing this holy place. Is it true" he asks, "that you are going to defeat the evil?"
 
 "Bring back the three pearls, as they are the only thing that can save our king."
 
@@ -862,7 +903,7 @@ Should you travel our lands, please visit the village north of the plains.
 My brother, Vernal is the local gravedigger. Please, if you find him, report back.
 Some reports came in that undead creates were spotted in that area. I am sick of worry.
 
-If you spot him, please let me know and I will make sure that your effort will be rewarded."""
+Let me at least heal your wounds. If you spot him, please let me know and I will make sure that your effort will be rewarded beyond that.\""""
             ],
             'brother': [
                 f"""You report of Vernal wellbeing.
@@ -883,59 +924,62 @@ He smiles, nods and leaves."""
     L_CASTLE: {
         'obstacle': {
             L_FOREST: [
-            f"""You can not pass before the rats are cleared 
-from the mechanism controlling the draw bridge."""
+            f"""You can not pass before drawbridge is lowered."""
             ],
         },
         'cleared': [
-            """The rats have been decimated. The draw bridge mechanism
-is function again."""
+            """The rats have been decimated. The drawbridge is functional again. You should talk to the commander."""
         ],
+        'talk': {
+            'rats': [
+                f"""You tell the commander that the rats are decimated by your actions.
+                
+"Well done! Now passage outside the castle is possible again. I do not recommend leaving to anyone but the most courageous.
+We heard reports of monsters blocking the path to the east.
+
+Take this - may it be of help on your journey.\""""
+            ],
+        },
         'story': [
-           f"""The castle draw bridge is lowered at your arrival. The guards 
-already expect you, {name} - the famous adventurer.
-They escort you to the throne room, where the anxious 
-king Balaar, ruler of the Kingdom of Pearls awaits you.
-He explains his worries. The evil sorcerer, Xonius, 
-threatened the king! He plans to takeover the rule.
+           f"""The castle drawbridge is lowered at your arrival. The guards already expect you, {name} - the famous adventurer. They escort you to the throne room, where the anxious king Balaar, ruler of the Kingdom of Pearls awaits you.
+           He explains his worries. The evil sorcerer, Xonius, threatened the king! He plans to takeover the rule. But even with his best man at the guard, the king fears for his life. Xonius is a powerful mage, who has the forbidden knowledge of dark magic. He can spawn an army of monsters, if only he would get hold of the king's magical crown, that hosts three pearls. 
+These pearls are known to have special powers, but the knowledge to unlock it has been lost.
 
-But even with his best man at the guard, the king 
-fears for his life. Xonius is a powerful mage, who has 
-the forbidden knowledge of dark magic. He can spawn an 
-army of monsters, if only he would get hold of the 
-king's magical crown, that hosts three pearls. 
-These pearls are known to have special powers, but the 
-knowledge to unlock it has been lost.
+Within that moment, the glass windows of the throne room shattered. A dark cloud emerged, and Xonius stepped our of the cloud. """,
+f""""Guards!" shouted the king, but it was too late, as the sorcerer already spoke his magic spell and turned the king to stone, while hastily taking the crown off his majesty's head. The moment you tried to step in, Xonius disappeared again in the dark cloud.
 
-Within that moment, the glass windows of the throne room 
-shattered. A dark cloud emerged, and Xonius stepped our 
-of the cloud. """,
-f""""Guards!" shouted the king, but it was too late, as the 
-sorcerer already spoke his magic spell and turned the 
-king to stone, while hastily taking the crown off his 
-majesty's head. The moment you tried to step in, 
-Xonius disappeared again in the dark cloud.
+The magic lifted - and all that was left, is a king made of stone and shattered glass. But this should only be the beginning of the tragedy in the lands of the kingdom.
 
-The magic lifted - and all that was left, is a king made
-of stone and shattered glass. But this should only be the 
-beginning of the tragedy in the lands of the kingdom.
+Reports of monster hordes came in. Even the castle was not spared - as a plague of rats infested the castle's cellar.
 
-Reports of monster hordes came in. Even the castle was 
-not spared - as a plague of rats infested the castle's 
-cellar.
+"We can't lower the castle's drawbridge, if we do not get rid of the rats.", explained the guard's commander.
+"The rats infested the winch. If we could only lower their numbers."
 
-"We can't lower the castle's draw bridge, if we do not get 
-rid of the rats.", explained the guard's commander.
-"The rats infested the mechanism. If we could only lower
-their numbers."
-
-Who will be brave enough to face the evil sorcerer, 
-rescue the lands from the monsters and bring back the 
-three magical pearls to break the kings spell?
+Who will be brave enough to face the evil sorcerer, rescue the lands from the monsters and bring back the three magical pearls to break the kings spell?
 """
         ]
     }
 }
+
+def wrap(text, length=50):
+    new_text = []
+    for line in text.split('\n'):
+        if len(line) > length:
+            cur_length = 0
+            split_line = line.split()
+            start = 0
+            for i, word in enumerate(split_line):
+                cur_length += len(word) + 1
+                if cur_length > length:
+                    new_text.append(" ".join(split_line[start:i+1]))
+                    start = i+1
+                    cur_length = 0
+            new_text.append(" ".join(split_line[start:]))
+        else:
+            new_text.append(line)
+    return "\n".join(new_text)
+
+
 
 def lore(location, new_location=None, category='story', title='You entered the '):
     if not location in LORE.keys():
@@ -955,7 +999,7 @@ O---------------------------------------------------------------O
         if i > 0:
             print("    [...]\n")
         #print("    " + textwrap.fill(story, 55, replace_whitespace=False, drop_whitespace=False, break_on_hyphens=False).replace('\n', '\n    '))
-        print("    " + story.replace('\n', '\n    '))
+        print("    " + wrap(story).replace('\n', '\n    '))
         if i < len(all_story_elements) -1:
             print("\n    [...]")
         pause("\n")
@@ -1050,9 +1094,14 @@ ACTIONS = {
     'bomb': ('b', f"{I_BOMB} Throw a [b]omb ({3 * S_HIT} to target & {S_HIT} to you)"),
 }
 
-def fight(zone):
-    global health, backpack, MONSTER_ZONES, MONSTER_CLEARED
+def max_potions_usable():
+    global level
+    return (level+1) // 2
 
+def fight(zone):
+    global health, backpack, MONSTER_ZONES, MONSTER_CLEARED, equiped
+
+    potions_used = 0
     monster = random.choice(MONSTER_ZONES[zone])
     values = monsters[monster]
     monster_dice = f"{values[0] * D_PURPLE}{values[1] * D_BLACK}"
@@ -1070,10 +1119,7 @@ def fight(zone):
         damage_message_callback = damage_message
         damage_message = "PLACEHOLDER o_O"
 
-
-    player_dice = DEFAULT_ITEM_EFFECT
-    for item in ITEM_EFFECTS.keys():
-        player_dice += backpack.count(item) * ITEM_EFFECTS[item]
+    player_dice = get_player_dice()
 
     while monster_health > 0 and health > 0:
 
@@ -1085,9 +1131,13 @@ def fight(zone):
         attack[1] += f" {player_dice}"
         options = [
             attack,
-            ACTIONS['retreat']
         ]
-        if I_POTION in backpack:
+        shoe_count = 0
+        for pack in equiped:
+            shoe_count += pack[2].count(I_SHOES)
+        if (shoe_count >= 2 and monster in BOSSES) or (shoe_count >= 1 and monster not in BOSSES):
+            options.append(ACTIONS['retreat'])
+        if I_POTION in backpack and potions_used < max_potions_usable():
             options.append(ACTIONS['potion'])
         if I_BANDAGE in backpack:
             options.append(ACTIONS['bandage'])
@@ -1137,8 +1187,8 @@ def fight(zone):
                 monster_health = max(0, monster_health - monster_damage)
                 health = max(0, health - player_damage)
 
-                if monster == E_VAMPIRE and monster_health < monster_max_health and player_damage > 0:
-                    monster_health = min(monster_max_health, monster_health + 1)
+                if monster == E_VAMPIRE and monster_health > 0 and monster_health < monster_max_health: # and monster_health < monster_max_health and player_damage > 0:
+                    monster_health = min(monster_max_health, monster_health + 2)
                     print(f"The {E_VAMPIRE} regained {S_HEART} health by drinking your blood.")
 
                 pause("")
@@ -1146,10 +1196,12 @@ def fight(zone):
                 # Retreat!
                 return
             elif cmd == ACTIONS['potion'][0]:
+                potions_used += 1
                 backpack = backpack.replace(I_POTION, "", 1)
-                potion_die = random.choice([D_RED, D_BLUE, D_GREEN, D_YELLOW])
+                potion_die = D_GREEN
                 player_dice += potion_die
-                pause(f"You feel stronger. A {potion_die} was added.")
+                limit_message = f"\n{S_BLOCKED} You can not use more potions at this level" if potions_used >= max_potions_usable() else ""
+                pause(f"You feel stronger. A {potion_die} was added." + limit_message)
             elif cmd == ACTIONS['bandage'][0]:
                 apply_bandage()
             elif cmd == ACTIONS['bomb'][0]:
@@ -1186,6 +1238,16 @@ def fight(zone):
             lore(location, None, 'cleared', 'You cleared the ')
 
 
+def get_player_dice():
+    global equiped
+    player_dice = DEFAULT_ITEM_EFFECT
+    for pack in equiped:
+        for item in regex.findall(r'\X', pack[2]):
+            if item in ITEM_EFFECTS:
+                player_dice += ITEM_EFFECTS[item]
+    return player_dice
+
+
 def apply_bandage():
     global backpack, health
     backpack = backpack.replace(I_BANDAGE, "", 1)
@@ -1208,13 +1270,26 @@ def monsters_cleared(zone):
             return True
     return MONSTER_CLEARED[zone] == 0
 
-def has_items(item_counts):
-    global backpack
+
+
+BACKPACK_ONLY = 1
+EQUIPPED_ONLY = 2
+BACKPACK_OR_EQUIPPED = 3
+def has_items(item_counts, mode=BACKPACK_ONLY):
+    global backpack, equiped
     has_all = True
     for item_count in item_counts:
         count, item = item_count
-        if backpack.count(item) < count:
+        backpack_count = 0
+        if mode == BACKPACK_ONLY or mode == BACKPACK_OR_EQUIPPED:
+            backpack_count += backpack.count(item)
+        equiped_count = 0
+        if mode == EQUIPPED_ONLY or mode == BACKPACK_OR_EQUIPPED:
+            for pack in equiped:
+                equiped_count += pack[2].count(item)
+        if backpack_count + equiped_count < count:
             has_all = False
+
     return has_all
 
 def talk(location, person, talk_callback=None):
@@ -1226,9 +1301,10 @@ LOCATION_OPTIONS = {
     L_CASTLE: [
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the shop", lambda: goto(L_SHOP)),
-        ('e', f"{S_EAST} [e]ast to the forest", lambda: goto(L_FOREST, lambda: monsters_cleared(L_CASTLE) ), lambda: monsters_cleared(L_CASTLE)),
-        ('s', f"{S_SOUTH} [s]outh to secret room", lambda: goto(L_PORTAL, lambda: has_items([(3, I_PEARL)]) ), lambda: has_items([(3, I_PEARL)]), True),
+        ('e', f"{S_EAST} [e]ast to the forest", lambda: goto(L_FOREST, lambda: QUESTS['rats'] == 1 and monsters_cleared(L_CASTLE) ), lambda: QUESTS['rats'] == 1 and monsters_cleared(L_CASTLE)),
+        ('s', f"{S_SOUTH} [s]outh to secret room", lambda: goto(L_PORTAL, lambda: has_items([(3, I_PEARL)])), lambda: has_items([(3, I_PEARL)]), True),
         SEPARATOR_DO,
+        ('t', f"{S_TALK} [t]alk to the commander", lambda: talk(L_CASTLE, 'rats', lambda: [pickup(f"{I_COIN * 2}"), increment_quest('rats')]), lambda: QUESTS['rats'] == 0 and monsters_cleared(L_CASTLE), True),
         ('f', f"{S_FIGHT} [f]ight rats in cellar", lambda: fight(L_CASTLE), lambda: not monsters_cleared(L_CASTLE), True),
     ],
     L_CATHEDRAL: [
@@ -1237,7 +1313,7 @@ LOCATION_OPTIONS = {
         SEPARATOR_DO,
         ('t', f"{S_TALK} [t]alk to the monk", lambda: talk(L_CATHEDRAL, 'monk', lambda: increment_quest('monk')), lambda: QUESTS['monk'] == 0, True),
         ('t', f"{S_TALK} [t]alk to the monk", lambda: talk(L_CATHEDRAL, 'brother', lambda: [pickup(f"{I_AMULET}{I_COIN * 3}"), increment_quest('monk')]), lambda: QUESTS['monk'] == 2, True),
-        ('h', f"{S_WELL} [h]eal at the well", lambda: heal(max_health)),
+        ('h', f"{S_WELL} [h]eal at the well", lambda: heal(max_health), lambda: QUESTS['monk'] >= 1, True),
     ],
     L_SHOP: [
         SEPARATOR_GO,
@@ -1247,6 +1323,8 @@ LOCATION_OPTIONS = {
         ('S', f"{I_SWORD} Buy a [S]word (Effect: {ITEM_EFFECTS[I_SWORD]} Cost: {prices[I_SWORD]})", lambda: buy(I_SWORD)),
         ('G', f"{I_GLOVES} Buy [G]loves (Effect: {ITEM_EFFECTS[I_GLOVES]} Cost: {prices[I_GLOVES]})", lambda: buy(I_GLOVES)),
         ('H', f"{I_BANDAGE} Buy [H]ealing bandages (Effect: {S_HEART * 2} Cost: {prices[I_BANDAGE]})", lambda: buy(I_BANDAGE)),
+        ('E', f"{I_SHOES} Buy Sho[E] (Effect: 1x{I_SHOES} = {S_RETREAT} Monsters, 2x{I_SHOES} = {S_RETREAT} Bosses, Cost: {prices[I_SHOES]})",
+         lambda: buy(I_SHOES), lambda: not has_items([(2, I_SHOES)], BACKPACK_OR_EQUIPPED), True),
     ],
     L_FOREST: [
         SEPARATOR_GO,
@@ -1284,7 +1362,7 @@ LOCATION_OPTIONS = {
         ('s', f"{S_SOUTH} [s]outh to the swamp", lambda: goto(L_SWAMP)),
         ('e', f"{S_EAST} [e]ast to the graveyard", lambda: goto(L_GRAVEYARD, lambda: monsters_cleared(L_RUINS)), lambda: monsters_cleared(L_RUINS)),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_RUINS)),
+        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_RUINS), lambda: not monsters_cleared(L_RUINS), True),
     ],
     L_GRAVEYARD: [
         SEPARATOR_GO,
@@ -1301,6 +1379,7 @@ LOCATION_OPTIONS = {
         ('t', f"{S_TALK} [t]alk to the gravedigger", lambda: talk(L_GRAVEDIGGER, 'gravedigger', lambda: increment_quest('monk')), lambda: QUESTS['monk'] == 1, True),
         SEPARATOR_BUY,
         #('P', f"{I_PICKAXE} Buy [P]ickaxe ()", lambda: pickup(I_PICKAXE, lambda: monsters_cleared(L_LAIR)),
+        ('B', f"{I_BUCKET} Buy [B]ucket (Effect: {ITEM_EFFECTS[I_BUCKET]} Cost: {prices[I_BUCKET]})", lambda: buy(I_BUCKET), lambda: not has_items([(1, I_BUCKET)], BACKPACK_OR_EQUIPPED), True),
         ('P', f"{I_PICKAXE} Buy [P]ickaxe (Effect: Digging Cost: {prices[I_PICKAXE]})",
          lambda: buy(I_PICKAXE, lambda: monsters_cleared(L_LAIR)),
          lambda: I_PICKAXE not in backpack, True),
@@ -1308,7 +1387,7 @@ LOCATION_OPTIONS = {
     L_TOMB: [
         SEPARATOR_GO,
         ('s', f"{S_SOUTH} [s]outh to the graveyard", lambda: goto(L_GRAVEYARD)),
-        ('e', f"{S_EAST} [e]ast to the lair", lambda: goto(L_LAIR, lambda: monsters_cleared(L_TOMB)), lambda: I_AMULET in backpack, True),
+        ('e', f"{S_EAST} [e]ast to the lair", lambda: goto(L_LAIR, lambda: monsters_cleared(L_TOMB)), lambda: has_items([(1, I_AMULET)], EQUIPPED_ONLY), True),
         SEPARATOR_DO,
         ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_TOMB)),
     ],
@@ -1324,7 +1403,7 @@ LOCATION_OPTIONS = {
         ('w', f"{S_WEST} [w]est to the swamp", lambda: goto(L_SWAMP)),
         ('e', f"{S_EAST} [e]ast to the beach", lambda: goto(L_BEACH, lambda: monsters_cleared(L_DESERT)), lambda: monsters_cleared(L_DESERT)),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_DESERT)),
+        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_DESERT), lambda: not monsters_cleared(L_DESERT), True),
     ],
     L_BEACH: [
         SEPARATOR_GO,
@@ -1332,7 +1411,7 @@ LOCATION_OPTIONS = {
         ('e', f"{S_EAST} [e]ast to board a ship", lambda: goto(L_SHIP, lambda: I_COFFIN in backpack), lambda: I_COFFIN in backpack),
         ('s', f"{S_SOUTH} [s]outh to enter cave", lambda: goto(L_CAVE, lambda: monsters_cleared(L_BEACH)), lambda: monsters_cleared(L_BEACH)),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_BEACH)),
+        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_BEACH), lambda: not monsters_cleared(L_BEACH), True),
     ],
     L_SHIP: [
         SEPARATOR_GO,
@@ -1351,7 +1430,7 @@ LOCATION_OPTIONS = {
     L_CAVE: [
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the beach", lambda: goto(L_BEACH)),
-        ('s', f"{S_SOUTH} [s]outh to the mines", lambda: goto(L_MINES, lambda: monsters_cleared(L_CAVE)), lambda: I_PICKAXE in backpack, True),
+        ('s', f"{S_SOUTH} [s]outh to the mines", lambda: goto(L_MINES, lambda: monsters_cleared(L_CAVE)), lambda: monsters_cleared(L_CAVE) and has_items([(1, I_PICKAXE)], EQUIPPED_ONLY), lambda: not has_items([(1, I_PICKAXE)], EQUIPPED_ONLY)),
         SEPARATOR_DO,
         ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_CAVE)),
     ],
@@ -1385,14 +1464,31 @@ LOCATION_OPTIONS = {
     ]
 }
 
+def get_equiped(with_empty=False):
+    global equiped
+    item_in_use = []
+    for i, pack in enumerate(equiped):
+        items_to_add = ""
+        if pack[2]:
+            items_to_add += pack[2]
+        if with_empty:
+             items_to_add += f"{I_EMPTY} " * (LEVELS['slots'][level][i+1] - len(regex.findall(r'\X', pack[2])))
+        item_in_use.append(items_to_add)
+
+    return item_in_use
+
 
 def status(event="", question="What would you like to do?"):
     clear()
+    backpack_item_count = len(regex.findall(r'\X', backpack))
+    print(health, max_health)
     print(f"""
 ******************************
 🗺️ {name}'s location: {location}
-🎒 Backpack: {backpack}{(backback_size-len(backpack)) * I_EMPTY} ({len(backpack)} / {backback_size} | {backpack.count(I_COIN)}x{I_COIN})
-Health: {health * S_HEART}{(max_health -  health) * S_HEART_EMPTY} ({int(0.5 + (health / max_health) * 100.0)}%)
+🎒 Backpack: {backpack}{(backback_size-backpack_item_count) * I_EMPTY} ({backpack_item_count} / {backback_size} | {backpack.count(I_COIN)}x{I_COIN})
+{" | ".join(get_equiped(True))}
+{get_player_dice()}
+HEALTH: {health * S_HEART}{(max_health -  health) * S_HEART_EMPTY} ({int(0.5 + (health / max_health) * 100.0)}%)
 LEVEL: {level}
 XP: {xp} / {LEVELS['xp'][level]}
 ******************************
@@ -1441,41 +1537,115 @@ def drop_from_backpack(exit_condition=None, message="Too much load"):
                 new_backpack += item
             backpack = new_backpack
 
-def equip_slot(slot, item):
+def equip_part(part, x):
 
-    print(slot, item[1])
+    while True:
+        available_items = _get_available_items(part)
 
+        if len(available_items) == 0 and len(equiped[part-1][2]) == 0:
+            pause("Nothing in the backpack that could fit.")
+            return
+
+        options = []
+        # For each level available slot
+        items = regex.findall(r'\X', equiped[part - 1][2])
+        for i in range(LEVELS['slots'][level][part]):
+            item = I_EMPTY + " " if len(items) <= i else items[i]
+            options.append((str(i+1), item))
+
+        options.append(('x', f'{S_DONE} e[x]it equipment'))
+        try:
+            action = get_action(options, f"Equip items in {equiped[part-1][1]}", "Which slot would you like to equip?")
+        except InvalidSelection:
+            pause("I do not know about this slot.")
+            continue
+        else:
+            cmd = options[action][0]
+            if cmd == 'x':
+                return
+            slot_index = options[action][0]
+            if equip_slot(part, int(cmd) - 1):
+                return
+
+
+def _get_available_items(slot):
+    available_items = []
     for item in regex.findall(r'\X', backpack):
         if not item in ITEM_TYPES:
             continue
 
         if slot in ITEM_TYPES[item]:
-            print(item)
-    pause("")
+            available_items.append(item)
+    return available_items
 
+
+def unequip(part, slot):
+    global equiped, backpack
+    all_slots = regex.findall(r'\X', equiped[part - 1][2])
+    backpack += all_slots[slot]
+    all_slots[slot] = ""
+    equiped[part - 1][2] = "".join(all_slots)
+
+def equip_slot(part, slot):
+    global backpack
+
+    while True:
+        options = []
+        available_items = _get_available_items(part)
+        for i, item in enumerate(available_items):
+            options.append((str(i+1), item))
+
+        currently_equiped = ""
+        if len(regex.findall(r'\X', equiped[part-1][2])) > slot:
+            currently_equiped = regex.findall(r'\X', equiped[part - 1][2])[slot]
+            options.append(('u', f'{currently_equiped} [u]unequip slot'))
+
+        options.append(('x', f'{S_DONE} e[x]it slots'))
+        try:
+            action = get_action(options, f"Equip items in {equiped[part-1][1]} - {slot+1}.Slot", "What to equip in the slot?")
+        except InvalidSelection:
+            pause("I do not know about this.")
+            continue
+        else:
+            cmd = options[action][0]
+            if cmd == 'x':
+                return False
+            if cmd == 'u':
+                unequip(part, slot)
+                return True
+            else:
+                to_equip = available_items[int(cmd)-1]
+                if currently_equiped:
+                    unequip(part, slot)
+                withdraw(1, to_equip)
+                equiped[part-1][2] += to_equip;
+                return True
 
 def equip_items():
 
     while True:
 
-        slots = [] + equiped
-        for i in range(len(slots)):
-            slots[i] = (slots[i][0], slots[i][2].replace(I_EMPTY, I_EMPTY + " ").ljust(6) + slots[i][1].ljust(14))
+        slots = copy.deepcopy(equiped)
+        for i in range(0, len(slots)):
+            equiped_slots = regex.findall(r'\X', slots[i][2])
+            equiped_slots += [(I_EMPTY + " ")] * (LEVELS['slots'][level][i+1] - len(equiped_slots))
+            slots[i] = (slots[i][0], "".join(equiped_slots).ljust(6) + slots[i][1].ljust(14))
 
         options = [
             SEPARATOR_DO
         ] + slots + [('x', f'{S_DONE} e[x]it inventory')]
         try:
             action = get_action(options, "Equip items", "What would you like to equip?")
-        except (IndexError, ValueError):
-            pause("I do not understand")
-            pass
+        except InvalidSelection:
+            pause("I do not understand this equipment action")
+            continue
         else:
             cmd = options[action][0]
             if cmd == 'x':
                 return
             else:
-                equip_slot(action, options[action])
+                equip_part(action, options[action])
+
         # for i, item in enumerate(equiped):
         #     description, slot = item
         #     print(i + 1, description.ljust(12), slot)
@@ -1694,13 +1864,18 @@ def get_character_options():
     options = [
         SEPARATOR_STATUS,
         ('i', f'{S_INVENTORY} [i]nventory', lambda: show_inventory()),
-        ('m', f'{S_MAP} [m]map', lambda: show_map())
+        ('m', f'{S_MAP} [m]map', lambda: show_map()),
+        ('SAVE', f'{S_SAVE} [save] game', lambda: save()),
+        ('LOAD', f'{S_LOAD} [load] game', lambda: load()),
     ]
     return options
 
+class InvalidSelection(Exception):
+    pass
+
 def get_action(options, event="", question="What would you like to do?"):
     if len(backpack) > backback_size:
-        drop_from_backpack(lambda: len(backpack) > backback_size)
+        drop_from_backpack(lambda: len(regex.findall(r'\X', backpack)) > backback_size)
 
     status(event, question)
 
@@ -1719,7 +1894,10 @@ def get_action(options, event="", question="What would you like to do?"):
             # Have condition
             if not option[3]():
                 if len(option) > 4:
-                    if option[4]:
+                    hidden = option[4]
+                    if callable(option[4]):
+                        hidden = option[4]()
+                    if hidden:
                         valid_options[-1][1] = False
                         continue
                 print(option[0], option[1] + f" ({S_BLOCKED} BLOCKED)")
@@ -1735,7 +1913,10 @@ def get_action(options, event="", question="What would you like to do?"):
 
 
     action = input("\nYour selection: ")
-    return valid_options.index([action, True])
+    try:
+        return valid_options.index([action, True])
+    except:
+        raise InvalidSelection()
 
 goto(L_CASTLE)
 while True:
@@ -1743,10 +1924,10 @@ while True:
     try:
         action = get_action(options)
         # Display error on secret option selection
-        if len(options[action]) > 4 and not options[action][3]() and options[action][4]:
-            raise ValueError
+        if len(options[action]) > 4 and not options[action][3]() and ( (callable(options[action][4] and not options[action][4]())) or not options[action][4]):
+                raise InvalidSelection
         options[action][2]()
-    except (IndexError, ValueError):
+    except InvalidSelection:
         pause("I do not understand.")
 
 
