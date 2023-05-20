@@ -246,7 +246,7 @@ L_GRAVEDIGGER = "🏚️ GRAVEDIGGER'S HOUSE"
 
 MAX_LEVEL = 10
 LEVELS = {
-    "xp":       [0, 500, 1000, 2500, 5000, 10000, 15000, 30000, 45000, 60000, math.inf],
+    "xp":       [0, 500, 1000, 2500, 5000, 10000, 15000, 25000, 40000, 50000, math.inf],
     "backpack": [9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
     "health":   [5, 6, 6, 7, 7,  8,  8,  9,  9,  10],
     "slots": [
@@ -319,8 +319,8 @@ LEVELS = {
             T_R_HAND: 2,
             T_ARMS: 2,
             T_FEET: 2,
-            T_FINGERS: 2,
-            T_HEAD: 2,
+            T_FINGERS: 3,
+            T_HEAD: 1,
         },
         # Level 9
         {
@@ -328,8 +328,8 @@ LEVELS = {
             T_R_HAND: 2,
             T_ARMS: 2,
             T_FEET: 2,
-            T_FINGERS: 2,
-            T_HEAD: 2,
+            T_FINGERS: 3,
+            T_HEAD: 1,
         },
         # Level 10
         {
@@ -337,8 +337,17 @@ LEVELS = {
             T_R_HAND: 3,
             T_ARMS: 2,
             T_FEET: 2,
-            T_FINGERS: 2,
-            T_HEAD: 2,
+            T_FINGERS: 3,
+            T_HEAD: 1,
+        },
+        # Level 11
+        {
+            T_L_HAND: 3,
+            T_R_HAND: 3,
+            T_ARMS: 2,
+            T_FEET: 2,
+            T_FINGERS: 3,
+            T_HEAD: 1,
         },
     ]
 }
@@ -491,13 +500,16 @@ def _reduced_to_count(rolled_dice: list, count: int, affect_types: list = [], ef
 def _reduce_all_damage_to_two(rolled_dice: list):
     return _reduced_to_count(rolled_dice, 2)
 
+def _reduce_all_damage_to_four(rolled_dice: list):
+    return _reduced_to_count(rolled_dice, 4)
+
 
 monsters = {
     # Purple Dice, Black Dice, Health, XP, LOOT, damage_callback
     E_RAT: (1, 0, 1, 50, "", _default_damage, ""),
     E_SNAKE: (3, 0, 2, 100, I_COIN * 1, _default_damage, ""),
 
-    E_TROLL: (4, 0, 10, 250, I_COIN * 3, _default_damage, ""),
+    E_TROLL: (4, 0, 6, 250, I_COIN * 3, _default_damage, ""),
 
     E_TOAD: (3, 1, 5, 150, I_COIN * 1, _default_damage, ""),
     E_SPIDER: (0, 4, 4, 200, f"{I_POTION}", _default_damage, ""),
@@ -508,22 +520,22 @@ monsters = {
               f"{S_MISS} Hard to hit. Ghosts only receive the first two hit!"),
 
     E_SCORPION: (3, 6, 5, 400, f"{I_COIN}", _default_damage, ""),
-    E_BAT: (2, 1, 3, 150, I_COIN * 1, _default_damage, ""),
+    E_BAT: (7, 5, 5, 500, "", _default_damage, ""),
 
     E_CRAB: (4, 7, 7, 500, f"{I_COIN * 3}", _default_damage, ""),
-    E_OCTOPUS: (2, 0, 3, 200, I_COIN * 2, _default_damage, ""),
-    E_SHARK: (2, 2, 5, 300, f"{I_COIN}", _blue_damage_only, f"Only {D_BLUE} attacks are effective against sharks!"),
+    E_OCTOPUS: (2, 8, 12, 600, I_COIN * 2, _default_damage, ""),
+    E_SHARK: (2, 4, 5, 700, f"{I_COIN}", _blue_damage_only, f"Only {D_BLUE} attacks are effective against sharks!"),
 
 
-    E_DEMON: (3, 3, 10, 600, I_COIN * 1, _magic_damage_only, f"Only {D_YELLOW} magic is effective against Demons!"),
-    E_JINN: (0, 6, 5, 800, I_COIN * 1, _magic_damage_only, f"Only {D_YELLOW} magic is effective against Jinns!"),
+    E_DEMON: (0, 14, 10, 1000, I_COIN * 1, _magic_damage_only, f"Only {D_YELLOW} magic is effective against Demons!"),
+    E_JINN: (2, 12, 5, 1000, I_COIN * 1, _magic_damage_only, f"Only {D_YELLOW} magic is effective against Jinns!"),
 
 
     E_MERMAID: (2, 6, 12, 2500, f"{I_RING}{I_PEARL}", _blue_damage_only, f"Only {D_BLUE} attacks are effective against Mermaids!"),
-    E_VAMPIRE: (0, 6, 8, 2500, f"{I_COIN * 6}{I_PEARL}", _default_damage, ""), # f"Only {D_RED} is effective against Vampires."),
-    E_DRAGON: (5, 5, 15, 2500, f"{I_COIN * 6}{I_PEARL}", _no_magic_effect, f"Dragon is immune to {D_YELLOW}"),
+    E_VAMPIRE: (1, 6, 8, 2500, f"{I_COIN * 6}{I_PEARL}", _reduce_all_damage_to_four, f"Vampire is quick! Only the first four attacks hit."),
+    E_DRAGON: (8, 8, 25, 15000, f"{I_COIN * 6}{I_CROWN}{I_PEARL}", _no_magic_effect, f"Dragon is immune to {D_YELLOW}"),
 
-    E_SORCERER: (6, 4, 10, 5000, f"{I_COIN}", _random_damage, _random_damage_message),
+    E_SORCERER: (3, 3, 10, 20000, f"{I_COIN}", _random_damage, _random_damage_message),
 }
 
 MONSTER_ZONES = {
@@ -557,10 +569,10 @@ MONSTER_CLEARED = {
     L_TOMB: 3,
     L_LAIR: BOSS_MONSTER,
     L_DESERT: 5,
-    L_SHIP: 3,
+    L_SHIP: 5,
     L_OCEAN: BOSS_MONSTER,
     L_CAVE: 5,
-    L_MINES: 3,
+    L_MINES: 5,
     L_VULCANO: BOSS_MONSTER,
     L_PORTAL: BOSS_MONSTER,
 }
@@ -577,6 +589,8 @@ DICE = {
 }
 
 QUESTS = {
+    'king': 0,
+            # 1 - Tried to revive him (portal opens)
     'rats': 0, # 0 - Commander is about to give you money if rats are cleared
                # 1 - You got the reward
     'monk': 0, # 0 - Not talked to monk
@@ -647,6 +661,14 @@ You can hear a loud scream. It pierces your ears - it is unbearable.
 You might have enraged the queen of the sea."""
             ],
         },
+        'cleared': [
+            """\"She is dead! She is dead!\" screams Captain Ghur at you in joy.
+            
+He puts down his hat and looks sadly into the water.
+
+\"I will miss her singing.\"
+"""
+        ],
         'story': [
             f"""You sail towards the open ocean.
 There is not much to see at this point, but an endless blue of water.
@@ -746,7 +768,7 @@ You see other structures near by, but how will you reach them?
 ceiling onto the coffin in the middle of the room. But what lies within?
         
 You amulet clearly points at the coffin. You approach it and slowly open the lid.
-A vampire king is sleeping inside the coffin. What will you do?"""
+The vampire king is sleeping inside the coffin. What will you do?"""
         ]
     },
     L_TOMB: {
@@ -784,6 +806,67 @@ The deeper you go, the darker it gets. You start to
 hear suspicious sounds. Squeaking and hissing.
 
 There is no safe passage through the forest, without ridden it first of its beasts.
+"""
+        ]
+    },
+    L_PORTAL: {
+        'cleared': [
+            """With your hit the sorcerer falls to the ground. You have defeated the evil force.
+            The lights in the room seem to diminish. Victory! It is time to break the evil spell and revive the king.
+A bright light emerges from the sorcerer's body. You have to cover your eyes.
+
+"Did you think you could defeat me this easily?!" his voice becomes deeper while his body ascends from the ground.
+He seems to grow in size. Now you cam make it out - he turns into a black dragon.""",
+
+"""\"You shall burst into flames, human!\" He takes a big breath - a red fire can be seen as he opens his mouth towards you.
+You try to find cover but there is nothing around that could protect you.
+
+A burst of flames brightens the room. But it is not his fire. Out of nothing, Ghur the red dragon appeared. It immadiatly attacked the black dragon.
+
+\"May this be a lesson for you.\" exclaims Ghur after the black dragon turns to ashes. A most powerful light brigthen the space.
+
+You pass out."""
+        ],
+        'story': [
+            """You enter what seems to be a secret space - it's black with small points of light in the distance.
+Could these be stars?
+
+\"Who let you in?\" the sorcerer approaches you.
+
+"I must have underestimated the power of the pearls. How foolish of me. Well - since you entered a time and space that is hard to comprehend for a mere mortal like you - I might as well get rid of you. Would you be so kind to hand over the pearls of power?"
+ 
+He reaches his hand towards you.
+
+"Fear not - you will perish either way."
+"""
+        ],
+    },
+    L_VULCANO: {
+        'obstacle': {
+            L_BRIDGE: [
+                f"""The snakes are in your way."""
+            ],
+        },
+        'cleared': [
+            """A loud scream echoes in the chambers.
+
+\"Good! Take the artifact.\" screams Hhror, the dragon at you. He spits something out.
+\"The wizard broke his promise. I shall not forget.\"
+
+Hhror jumps through the ceiling of the vulcano. A hot stream of lava follows him.
+Time to leave!
+"""
+        ],
+        'story': [
+            """You enter a large chamber lit by hot lava flowing in streams throughout the walls.
+You start sweating - but not beacuse of the heat. The chamber is occupied by the largest creature you have seen in this realm: A red dragon.
+It breaths slowly, exhausting smoke. It immediately spotted your presence.
+
+\"A visitor? Since you came past my guards you will be a worthy snack for Hhror. I hope the wizard sent his best.\"
+
+The dragon stands up and now you can clearly see its full size! It spreads his wings. A single step makes the vulcano shake and dust falls off the cave's ceiling.
+
+"Find your courage!" you say to yourself.
 """
         ]
     },
@@ -851,10 +934,68 @@ You can not tell where it ends - but strange and spikey poles catch your gaze in
 """
       ]
     },
+    L_CAVE: {
+        'obstacle': {
+            L_MINES: [
+                f"""There seems to be a passage, but it is blocked. With the right tool and no creatures around you might get through."""
+            ],
+        },
+        'cleared': [
+            """The bats seem to not bother you anymore."""
+        ],
+        'story': [
+            """You enter a dark cave. You can barely see your next step. But high-pitched sounds make you uncomfortable.
+Is this cave even going anywhere?"""
+        ]
+    },
+    L_BLACKSMITH: {
+        'story': [
+            """You sneak by one of the tunnels following a light. It leads to a magically sealed door. You knock.
+To your surprise a voice answeres:
+
+"Who is it?" The door opens and reveals a dwarven blacksmith by the name of Thudur. He escaped the fate of his fellows
+by magic and has been living in part of the mines perfecting his craft.
+"""
+        ]
+    },
+    L_MINES: {
+        'obstacle': {
+            L_VULCANO: [
+                f"""You feel a powerful presence behind these walls. But in order to reveal it you have to get past these magical creatures."""
+            ],
+        },
+        'cleared': [
+            """The voices silenced. You can now clearly hear a slow and loud breating."""
+        ],
+        'story': [
+            """With the help of the pickaxe you clear the entrance behind the cave. It seems to lead to tunnels. Man-made but small.
+These must be old dwarfen mines. They seem abandoned and soon you realize why. Devilish magical creatures have invested the tunnels."""
+        ]
+    },
+    L_SHIP: {
+        'obstacle': {
+            L_OCEAN: [
+                f"""You can not sail with the sea monsters endangering your voyage."""
+            ],
+        },
+        'cleared': [
+            """\"It won't be easy but I think I can navigate past the creatures now. Of course, since I am Captain Ghur!\""""
+        ],
+        'story': [
+            """You board an old ship that anchored close to the shore.
+The captain greets you.
+
+"I am captain Ghur! Yes THE captain Ghur. You are welcome to tell my stories."
+He smiles revealing teath of silver. 
+
+"I wish I could help your travels, but since a terrible sea creature started its reign over the sea we can not move.
+Monsters of incredible size hinder us from save sailing. They seem to serve their queen of terror. At nights you can hear her singing ... not bad at times, if you ask me.\""""
+        ]
+    },
     L_BEACH: {
         'obstacle': {
             L_SHIP: [
-                f"""You need a boat to swim to the ship."""
+                f"""You need a boat and a clear path to board the ship."""
             ],
             L_CAVE: [
                 f"""The entrance to to cave is blocked by crabs."""
@@ -877,6 +1018,12 @@ But in order to come closer to the shore, you need to fight your way through mon
 Stroking his long beard and mustering you from head to toe, he asks:
 "Yes, yes. What can I do for you?"
 """
+        ]
+    },
+    L_HUT: {
+        'story': [
+            """You put the coffin onto the lake and jump in. It may not be a boat but it seems like a common way to
+travel in swamps."""
         ]
     },
     L_CATHEDRAL: {
@@ -924,13 +1071,36 @@ He smiles, nods and leaves."""
     L_CASTLE: {
         'obstacle': {
             L_FOREST: [
-            f"""You can not pass before drawbridge is lowered."""
+            f"""You can not pass before the drawbridge is lowered."""
             ],
         },
         'cleared': [
             """The rats have been decimated. The drawbridge is functional again. You should talk to the commander."""
         ],
+        'epilogue': [
+            f"""You wake up back in the castle. The king and Nordil are sitting next to your bed. You can barely remember what happened.
+\"The hero is awake. {name}! Welcome back\" says the kind while holding your shoulder.
+
+\"I owe you my kingdom. I owe you my life. From here on you shall be known as the third dragon.\"
+
+The group is led towards the castle's balcony, where the people all gathered to celebrate your victory.
+And far out in the sky you can see the silhouette of a red dragon passing by.            
+"""
+        ],
         'talk': {
+            "king": [f"""The second you make a step the three pearls light up.
+             The king's statue starts to glow. Will it be able to break the spell?
+
+            But before you know it a dark shadow appears. The sorcerer enters and stops the glowing with a sudden move and some mumbling that you can not fully comprehend. 
+
+            \"{name}, is it? You seem to have fought well. But this will not bring back your king. I am the ruler of this world now!\"
+
+            He sends a powerful blast your direction - you can barely dodge it. The sorcerer is gone, but it its place is a shining
+            portal of some sort. It seems that having the pearls in reach keeps the portal open.
+            
+            You feel that there might be no escape from where this portal leads. You better be prepared before entering.
+            """
+            ],
             'rats': [
                 f"""You tell the commander that the rats are decimated by your actions.
                 
@@ -1098,6 +1268,21 @@ def max_potions_usable():
     global level
     return (level+1) // 2
 
+
+def game_over(text):
+    print("""
+     _______  _______  __   __  _______    _______  __   __  _______  ______   
+    |       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  
+    |    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  
+    |   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ 
+    |   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |
+    |   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |
+    |_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|
+            """)
+    pause(text + "\n")
+    sys.exit(0)
+
+
 def fight(zone):
     global health, backpack, MONSTER_ZONES, MONSTER_CLEARED, equiped
 
@@ -1135,7 +1320,7 @@ def fight(zone):
         shoe_count = 0
         for pack in equiped:
             shoe_count += pack[2].count(I_SHOES)
-        if (shoe_count >= 2 and monster in BOSSES) or (shoe_count >= 1 and monster not in BOSSES):
+        if monster != E_SORCERER and (shoe_count >= 2 and monster in BOSSES) or (shoe_count >= 1 and monster not in BOSSES):
             options.append(ACTIONS['retreat'])
         if I_POTION in backpack and potions_used < max_potions_usable():
             options.append(ACTIONS['potion'])
@@ -1187,8 +1372,8 @@ def fight(zone):
                 monster_health = max(0, monster_health - monster_damage)
                 health = max(0, health - player_damage)
 
-                if monster == E_VAMPIRE and monster_health > 0 and monster_health < monster_max_health: # and monster_health < monster_max_health and player_damage > 0:
-                    monster_health = min(monster_max_health, monster_health + 2)
+                if monster == E_VAMPIRE and monster_health > 0 and monster_health < monster_max_health and player_damage > 0:
+                    monster_health = min(monster_max_health, monster_health + 1)
                     print(f"The {E_VAMPIRE} regained {S_HEART} health by drinking your blood.")
 
                 pause("")
@@ -1217,17 +1402,7 @@ def fight(zone):
                 pause("I do not understand.")
 
     if health == 0:
-        print("""
- _______  _______  __   __  _______    _______  __   __  _______  ______   
-|       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  
-|    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  
-|   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ 
-|   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |
-|   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |
-|_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|
-        """)
-        pause(f"{S_SKULL * 3} YOU WERE DEFEATED {S_SKULL * 3}")
-        sys.exit(0)
+        game_over(f"{S_SKULL * 3} YOU WERE DEFEATED {S_SKULL * 3}")
     if monster_health == 0:
         old_clear_count = MONSTER_CLEARED[zone]
         MONSTER_CLEARED[zone] = max(0, MONSTER_CLEARED[zone] - 1)
@@ -1236,6 +1411,7 @@ def fight(zone):
         backpack += monster_loot
         if old_clear_count > 0 and MONSTER_CLEARED[zone] == 0:
             lore(location, None, 'cleared', 'You cleared the ')
+
 
 
 def get_player_dice():
@@ -1302,8 +1478,9 @@ LOCATION_OPTIONS = {
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the shop", lambda: goto(L_SHOP)),
         ('e', f"{S_EAST} [e]ast to the forest", lambda: goto(L_FOREST, lambda: QUESTS['rats'] == 1 and monsters_cleared(L_CASTLE) ), lambda: QUESTS['rats'] == 1 and monsters_cleared(L_CASTLE)),
-        ('s', f"{S_SOUTH} [s]outh to secret room", lambda: goto(L_PORTAL, lambda: has_items([(3, I_PEARL)])), lambda: has_items([(3, I_PEARL)]), True),
+        ('s', f"{S_SOUTH} [s]outh through portal", lambda: goto(L_PORTAL, lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), lambda: QUESTS['king'] == 1 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
         SEPARATOR_DO,
+        ('k', f"{I_CROWN} Revive the [k]ing", lambda: [talk(L_CASTLE, 'king', lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), increment_quest('king')], lambda: QUESTS['king'] == 0 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
         ('t', f"{S_TALK} [t]alk to the commander", lambda: talk(L_CASTLE, 'rats', lambda: [pickup(f"{I_COIN * 2}"), increment_quest('rats')]), lambda: QUESTS['rats'] == 0 and monsters_cleared(L_CASTLE), True),
         ('f', f"{S_FIGHT} [f]ight rats in cellar", lambda: fight(L_CASTLE), lambda: not monsters_cleared(L_CASTLE), True),
     ],
@@ -1381,8 +1558,7 @@ LOCATION_OPTIONS = {
         #('P', f"{I_PICKAXE} Buy [P]ickaxe ()", lambda: pickup(I_PICKAXE, lambda: monsters_cleared(L_LAIR)),
         ('B', f"{I_BUCKET} Buy [B]ucket (Effect: {ITEM_EFFECTS[I_BUCKET]} Cost: {prices[I_BUCKET]})", lambda: buy(I_BUCKET), lambda: not has_items([(1, I_BUCKET)], BACKPACK_OR_EQUIPPED), True),
         ('P', f"{I_PICKAXE} Buy [P]ickaxe (Effect: Digging Cost: {prices[I_PICKAXE]})",
-         lambda: buy(I_PICKAXE, lambda: monsters_cleared(L_LAIR)),
-         lambda: I_PICKAXE not in backpack, True),
+         lambda: buy(I_PICKAXE, lambda: monsters_cleared(L_LAIR)), lambda: not has_items([(1, I_PICKAXE)], BACKPACK_OR_EQUIPPED), True),
     ],
     L_TOMB: [
         SEPARATOR_GO,
@@ -1408,7 +1584,7 @@ LOCATION_OPTIONS = {
     L_BEACH: [
         SEPARATOR_GO,
         ('w', f"{S_WEST} [w]est to the desert", lambda: goto(L_DESERT)),
-        ('e', f"{S_EAST} [e]ast to board a ship", lambda: goto(L_SHIP, lambda: I_COFFIN in backpack), lambda: I_COFFIN in backpack),
+        ('e', f"{S_EAST} [e]ast to board a ship", lambda: goto(L_SHIP, lambda: monsters_cleared(L_BEACH) and I_COFFIN in backpack), lambda: monsters_cleared(L_BEACH) and I_COFFIN in backpack),
         ('s', f"{S_SOUTH} [s]outh to enter cave", lambda: goto(L_CAVE, lambda: monsters_cleared(L_BEACH)), lambda: monsters_cleared(L_BEACH)),
         SEPARATOR_DO,
         ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_BEACH), lambda: not monsters_cleared(L_BEACH), True),
@@ -1457,10 +1633,10 @@ LOCATION_OPTIONS = {
         ('D', f"{I_SHIELD} Buy a shiel[D] (Effect: {ITEM_EFFECTS[I_SHIELD]} Cost: {prices[I_SHIELD]})", lambda: buy(I_SHIELD)),
     ],
     L_PORTAL: [
-        SEPARATOR_GO,
-        ('n', f"{S_NORTH} [n]orth to the castle", lambda: goto(L_CASTLE)),
+        #SEPARATOR_GO,
+        #('n', f"{S_NORTH} [n]orth to the castle", lambda: goto(L_CASTLE)),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Evil Sorcerer", lambda: fight(L_PORTAL), lambda: not monsters_cleared(L_PORTAL), True),
+        ('f', f"{S_FIGHT} [f]ight Evil Sorcerer", lambda: [fight(L_PORTAL), lore(L_CASTLE, None, 'epilogue', 'Epilogue at the '), game_over("A new adventure awaits ...")], lambda: not monsters_cleared(L_PORTAL), True),
     ]
 }
 
