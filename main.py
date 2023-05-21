@@ -29,7 +29,9 @@ import sys
 import regex
 
 
-# Cheaters, move on ...
+# -----------------------------------------------------------------------------
+# -- DEBUG
+# -----------------------------------------------------------------------------
 DEBUG_START_LEVEL = 1
 DEBUG_SHOW_COMPLETE_MAP = False #True
 DEBUG_LARGE_INVENTORY = False #True
@@ -38,6 +40,9 @@ DEBUG_START_COINS = 0
 DEBUG_MONSTERS_CLEARED = False
 DEBUG_BOSSES_CLEARED = False
 
+# -----------------------------------------------------------------------------
+# -- ITEMS
+# -----------------------------------------------------------------------------
 I_EMPTY = "_"
 I_SWORD = "🗡️"
 I_SHIELD = "🛡️"
@@ -60,6 +65,20 @@ I_BUCKET = "🪣"
 I_AMULET = "📿"
 
 I_NOT_DROPABLE = f"{I_COFFIN}{I_PEARL}{I_PICKAXE}{I_AMULET}"
+
+PRICES = {
+    I_SWORD: 3,
+    I_GLOVES: 3,
+    I_BUCKET: 3,
+    I_BOW: 5,
+    I_BATTLE_AXE: 10,
+    I_SHIELD: 10,
+    I_SHOES: 1,
+    I_BOMB: 3,
+    I_POTION: 2,
+    I_BANDAGE: 2,
+    I_PICKAXE: 3,
+}
 
 # TYPES
 T_CARRY = 0
@@ -87,34 +106,6 @@ ITEM_TYPES = {
     I_SPELLBOOK: [T_L_HAND, T_R_HAND]
 }
 
-equiped = [
-    ['l', "🇱 Left Hand", ""],
-    ['r', "🇷 Right Hand", ""],
-    ['a', "🖐️ Arms/Hands", ""],
-    ['f', "🦶 Feet", ""],
-    ['j', "🫳 Jewellery", ""],
-    ['h', "🧑 Head", ""],
-]
-
-E_OCTOPUS = "🐙 OCTOPUS"
-E_SNAKE = "🐍 SNAKE"
-E_DRAGON = "🐉 DRAGON"
-E_RAT = "🐀 RAT"
-E_GHOST = "👻 GHOST"
-E_ZOMBIE = "🧟‍️ ZOMBIE"
-E_BAT = "🦇 MEGABAT"
-E_TOAD = "🐸 GIANT TOAD"
-E_SPIDER = "🕷️ SPIDER"
-E_SCORPION = "🦂 LARGE SCORPION"
-E_TROLL = "🧌 TROLL"
-E_VAMPIRE = "🧛 VAMPIRE"
-E_SKELETON = "💀 SKELETON"
-E_DEMON = "👹 DEMON"
-E_CRAB = "🦀 MONSTER CRAB"
-E_SHARK = "🦈 SHARK"
-E_MERMAID = "🧜 MERMAID"
-E_JINN = "🧞 JINN"
-E_SORCERER = "🧙 EVIL SORCERER"
 
 D_GREEN = "🟩"
 D_RED = "🟥"
@@ -147,9 +138,11 @@ S_INVENTORY = "📦"
 S_MAP = "🗺️"
 S_STATUS = "📜"
 S_DONE = "↩️"
+S_NEW = "⚔️🆕"
 S_SAVE = "💾⬅️"
 S_LOAD = "💾⤵️"
 S_QUIT = "🚪"
+S_OPTIONS = "⚙️"
 
 DEFAULT_ITEM_EFFECT = D_GREEN * 2
 ITEM_EFFECTS = {
@@ -170,6 +163,9 @@ ITEM_EFFECTS = {
     I_PEARL: (D_YELLOW * 3),
 }
 
+# -----------------------------------------------------------------------------
+# -- Locations
+# -----------------------------------------------------------------------------
 L_CASTLE = "🏰 CASTLE"
 L_BRIDGE = "🏞️ BRIDGE"
 L_FOREST = "🌲 FOREST"
@@ -192,6 +188,9 @@ L_LAIR = "⚰️ LAIR"
 L_PORTAL = "🌀 PORTAL"
 L_GRAVEDIGGER = "🏚️ GRAVEDIGGER'S HOUSE"
 
+# -----------------------------------------------------------------------------
+# -- Stats
+# -----------------------------------------------------------------------------
 MAX_LEVEL = 10
 LEVELS = {
     "xp":       [0, 500, 1000, 2500, 5000, 10000, 15000, 25000, 40000, 50000, math.inf],
@@ -300,83 +299,9 @@ LEVELS = {
     ]
 }
 
-def clear():
-    # for windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-
-    # for mac and linux(here, os.name is 'posix')
-    else:
-        _ = os.system('clear')
-
-def pause(text):
-    input(text + " (Press Enter to continue)")
-
-
-clear()
-print("""
-                 _   __ _____  _   _  _____ ______  _____ ___  ___    _____ ______  
-                | | / /|_   _|| \ | ||  __ \|  _  \|  _  ||  \/  |   |  _  ||  ___| 
-                | |/ /   | |  |  \| || |  \/| | | || | | || .  . |   | | | || |_    
-                |    \   | |  | . ` || | __ | | | || | | || |\/| |   | | | ||  _|   
-                | |\  \ _| |_ | |\  || |_\ \| |/ / \ \_/ /| |  | |   \ \_/ /| |     
-                \_| \_/ \___/ \_| \_/ \____/|___/   \___/ \_|  |_/    \___/ \_|     
-                                                                                  
-                                                                                  
-                            ______  _____   ___  ______  _      _____               
-                            | ___ \|  ___| / _ \ | ___ \| |    /  ___|              
-                            | |_/ /| |__  / /_\ \| |_/ /| |    \ `--.               
-                            |  __/ |  __| |  _  ||    / | |     `--. \              
-                            | |    | |___ | | | || |\ \ | |____/\__/ /              
-                            \_|    \____/ \_| |_/\_| \_|\_____/\____/               
-""")
-print(25 * ' ' +"""\033[49m                        \033[38;2;96;204;227;49m▄▄▄\033[49m                       \033[m
-\033[49m                    \033[38;2;251;242;56;49m▄\033[49m \033[38;2;99;185;203;49m▄\033[38;2;88;141;152;48;2;96;204;227m▄\033[48;2;99;185;203m \033[38;2;99;185;203;48;2;248;248;248m▄\033[38;2;202;218;252;48;2;248;248;248m▄\033[38;2;248;248;248;48;2;96;204;227m▄\033[38;2;96;204;227;49m▄\033[49m \033[38;2;251;242;56;49m▄\033[49m                   \033[m
-\033[49m                   \033[49;38;2;251;242;56m▀\033[49m \033[48;2;195;162;30m \033[38;2;100;154;255;48;2;99;185;203m▄\033[38;2;92;110;224;48;2;88;141;152m▄\033[38;2;100;154;255;48;2;99;185;203m▄\033[38;2;88;141;152;48;2;99;185;203m▄\033[48;2;99;185;203m \033[38;2;99;185;203;48;2;202;218;252m▄\033[48;2;96;204;227m \033[48;2;251;242;56m \033[49m \033[49;38;2;251;242;56m▀\033[49m                  \033[m
-\033[49m         \033[38;2;96;204;227;49m▄\033[38;2;99;185;203;48;2;96;204;227m▄\033[38;2;248;248;248;48;2;96;204;227m▄▄\033[38;2;96;204;227;49m▄\033[49m        \033[49;38;2;195;162;30m▀\033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;92;110;224m▄\033[48;2;100;154;255m \033[38;2;100;154;255;48;2;88;141;152m▄\033[38;2;251;242;56;48;2;99;185;203m▄\033[49;38;2;251;242;56m▀\033[49m         \033[38;2;96;204;227;49m▄\033[38;2;99;185;203;48;2;96;204;227m▄\033[38;2;248;248;248;48;2;96;204;227m▄▄\033[38;2;96;204;227;49m▄\033[49m       \033[m
-\033[49m     \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;195;162;30;49m▄\033[48;2;99;185;203m \033[48;2;88;141;152m \033[48;2;99;185;203m  \033[38;2;99;185;203;48;2;202;218;252m▄\033[38;2;202;218;252;48;2;248;248;248m▄\033[48;2;96;204;227m \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;251;242;56;49m▄\033[49m   \033[38;2;95;73;68;49m▄\033[49m \033[49;38;2;195;162;30m▀\033[38;2;145;122;36;48;2;195;162;30m▄\033[38;2;145;122;36;48;2;251;242;56m▄\033[38;2;195;162;30;48;2;251;242;56m▄\033[49;38;2;251;242;56m▀\033[49m      \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;195;162;30;49m▄\033[48;2;99;185;203m \033[48;2;88;141;152m \033[48;2;99;185;203m  \033[38;2;99;185;203;48;2;202;218;252m▄\033[38;2;202;218;252;48;2;248;248;248m▄\033[48;2;96;204;227m \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;251;242;56;49m▄\033[49m   \033[m
-\033[49m       \033[49;38;2;195;162;30m▀\033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;92;110;224m▄\033[38;2;92;110;224;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;88;141;152m▄\033[38;2;88;141;152;48;2;99;185;203m▄\033[48;2;99;185;203m \033[38;2;251;242;56;48;2;96;204;227m▄\033[49;38;2;251;242;56m▀\033[49m    \033[38;2;89;87;83;48;2;95;73;68m▄\033[38;2;131;125;134;48;2;95;73;68m▄\033[49m       \033[38;2;95;73;68;49m▄\033[48;2;95;73;68m \033[49m     \033[49;38;2;195;162;30m▀\033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;92;110;224m▄\033[38;2;92;110;224;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;88;141;152m▄\033[38;2;88;141;152;48;2;99;185;203m▄\033[48;2;99;185;203m \033[38;2;251;242;56;48;2;96;204;227m▄\033[49;38;2;251;242;56m▀\033[49m     \033[m
-\033[49m         \033[48;2;195;162;30m \033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;251;242;56;48;2;100;154;255m▄▄\033[48;2;251;242;56m \033[49m      \033[48;2;89;87;83m \033[48;2;131;125;134m \033[38;2;131;125;134;48;2;120;113;123m▄\033[38;2;131;125;134;49m▄\033[38;2;154;172;182;49m▄▄\033[38;2;95;73;68;49m▄\033[38;2;89;87;83;49m▄\033[38;2;95;73;68;49m▄\033[48;2;131;125;134m \033[38;2;131;125;134;48;2;154;172;182m▄\033[49m       \033[48;2;195;162;30m \033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;251;242;56;48;2;100;154;255m▄▄\033[48;2;251;242;56m \033[49m       \033[m
-\033[49m          \033[49;38;2;145;122;36m▀▀\033[49;38;2;195;162;30m▀\033[49m       \033[38;2;89;87;83;48;2;95;73;68m▄\033[48;2;89;87;83m \033[38;2;131;125;134;48;2;113;107;116m▄\033[38;2;113;107;116;48;2;131;125;134m▄\033[38;2;131;125;134;48;2;113;107;116m▄\033[48;2;131;125;134m \033[38;2;131;125;134;48;2;120;113;123m▄\033[38;2;113;107;116;48;2;120;113;123m▄\033[38;2;89;87;83;48;2;95;73;68m▄\033[38;2;131;125;134;48;2;120;113;123m▄\033[48;2;154;172;182m \033[49m        \033[49;38;2;145;122;36m▀▀\033[49;38;2;195;162;30m▀\033[49m        \033[m
-\033[49m                    \033[48;2;89;87;83m \033[48;2;95;73;68m \033[38;2;113;107;116;48;2;131;125;134m▄\033[48;2;131;125;134m \033[38;2;61;55;51;48;2;131;125;134m▄\033[38;2;61;55;51;48;2;89;87;83m▄\033[38;2;89;87;83;48;2;120;113;123m▄\033[48;2;120;113;123m \033[38;2;113;107;116;48;2;89;87;83m▄\033[48;2;131;125;134m \033[38;2;113;107;116;48;2;131;125;134m▄\033[49m                   \033[m
-\033[49m                 \033[38;2;83;76;41;49m▄\033[38;2;61;89;95;49m▄▄\033[38;2;61;89;95;48;2;95;73;68m▄\033[38;2;61;89;95;48;2;89;87;83m▄\033[38;2;61;89;95;48;2;131;125;134m▄▄\033[38;2;95;62;85;48;2;61;55;51m▄▄\033[38;2;116;76;59;48;2;61;55;51m▄\033[38;2;61;89;95;48;2;120;113;123m▄\033[38;2;88;141;152;48;2;113;107;116m▄\033[38;2;83;76;41;48;2;131;125;134m▄\033[38;2;88;141;152;48;2;131;125;134m▄\033[38;2;61;89;95;49m▄\033[38;2;88;141;152;49m▄\033[38;2;76;105;50;49m▄\033[49m                \033[m
-\033[49m        \033[38;2;83;76;41;49m▄▄▄\033[38;2;57;74;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄▄▄\033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;83;76;41m▄\033[38;2;83;76;41;48;2;61;89;95m▄\033[38;2;83;76;41;48;2;102;60;52m▄\033[38;2;116;76;59;48;2;76;105;50m▄\033[38;2;102;60;52;48;2;76;105;50m▄▄\033[38;2;102;60;52;48;2;95;62;85m▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;102;60;52;48;2;142;87;61m▄\033[38;2;116;76;59;48;2;61;89;95m▄\033[38;2;116;76;59;48;2;83;76;41m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m   \033[38;2;85;123;50;48;2;102;152;56m▄▄\033[38;2;85;123;50;49m▄▄▄\033[38;2;102;152;56;49m▄\033[49m          \033[m
-\033[49m \033[38;2;83;76;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄\033[48;2;57;74;41m     \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;71;95;49;48;2;57;74;41m▄\033[38;2;116;76;59;48;2;71;95;49m▄\033[38;2;116;76;59;48;2;102;60;52m▄▄\033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄▄\033[38;2;76;105;50;48;2;116;76;59m▄▄\033[38;2;76;105;50;48;2;142;87;61m▄\033[38;2;76;105;50;48;2;116;76;59m▄\033[48;2;76;105;50m      \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄▄▄\033[38;2;85;123;50;48;2;76;105;50m▄\033[48;2;85;123;50m \033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄▄\033[38;2;85;123;50;48;2;102;152;56m▄\033[38;2;85;123;50;49m▄\033[38;2;102;152;56;49m▄\033[49m    \033[m
-\033[48;2;57;74;41m   \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m    \033[38;2;57;74;41;48;2;71;95;49m▄\033[48;2;71;95;49m  \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m  \033[38;2;116;76;59;48;2;102;60;52m▄▄▄\033[38;2;116;76;59;48;2;76;105;50m▄▄▄▄\033[38;2;142;87;61;48;2;76;105;50m▄▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[m""".replace('\n', '\n' + ' ' * 25))
-print("©2023 StateOffGames".center(100))
-
-name = ""
-while name.strip() == "":
-    name = input("What is the name of the hero? ")
-
-if len(name) > 20:
-    name = name[:20]
-    pause(f"That's a long name. I will call you {name}")
-
-print("Welcome", name, "on your great adventure!")
-backpack = f"{I_POTION}{I_COIN * 2}" + (f"{I_BATTLE_AXE}{I_CROWN}{I_SHIELD}{I_BATTLE_AXE}{I_BOMB}{I_COIN * DEBUG_START_COINS}{I_PEARL * DEBUG_START_PEARL_COUNT}" if DEBUG_LARGE_INVENTORY else "")
-level = DEBUG_START_LEVEL
-backback_size = LEVELS['backpack'][level - 1]
-location = ""
-visited = []
-max_health = LEVELS['health'][level - 1]
-health = max_health
-xp = LEVELS['xp'][level - 1]
-
-prices = {
-    I_SWORD: 3,
-    I_GLOVES: 3,
-    I_BUCKET: 3,
-    I_BOW: 5,
-    I_BATTLE_AXE: 10,
-    I_SHIELD: 10,
-    I_SHOES: 1,
-    I_BOMB: 3,
-    I_POTION: 2,
-    I_BANDAGE: 2,
-    I_PICKAXE: 3,
-}
-
+# -----------------------------------------------------------------------------
+# -- Damage Callbacks
+# -----------------------------------------------------------------------------
 
 def _default_damage(rolled_dice: list) -> int:
     return False, rolled_dice
@@ -449,8 +374,31 @@ def _reduce_all_damage_to_two(rolled_dice: list):
 def _reduce_all_damage_to_four(rolled_dice: list):
     return _reduced_to_count(rolled_dice, 4)
 
+# -----------------------------------------------------------------------------
+# -- Enemies
+# -----------------------------------------------------------------------------
 
-monsters = {
+E_OCTOPUS = "🐙 OCTOPUS"
+E_SNAKE = "🐍 SNAKE"
+E_DRAGON = "🐉 DRAGON"
+E_RAT = "🐀 RAT"
+E_GHOST = "👻 GHOST"
+E_ZOMBIE = "🧟‍️ ZOMBIE"
+E_BAT = "🦇 MEGABAT"
+E_TOAD = "🐸 GIANT TOAD"
+E_SPIDER = "🕷️ SPIDER"
+E_SCORPION = "🦂 LARGE SCORPION"
+E_TROLL = "🧌 TROLL"
+E_VAMPIRE = "🧛 VAMPIRE"
+E_SKELETON = "💀 SKELETON"
+E_DEMON = "👹 DEMON"
+E_CRAB = "🦀 MONSTER CRAB"
+E_SHARK = "🦈 SHARK"
+E_MERMAID = "🧜 MERMAID"
+E_JINN = "🧞 JINN"
+E_SORCERER = "🧙 EVIL SORCERER"
+
+MONSTERS = {
     # Purple Dice, Black Dice, Health, XP, LOOT, damage_callback
     E_RAT: (1, 0, 1, 50, "", _default_damage, ""),
     E_SNAKE: (3, 0, 2, 100, I_COIN * 1, _default_damage, ""),
@@ -524,6 +472,9 @@ MONSTER_CLEARED = {
 }
 BOSSES = (E_VAMPIRE, E_MERMAID, E_DRAGON, E_SORCERER)
 
+# -----------------------------------------------------------------------------
+# -- Effects
+# -----------------------------------------------------------------------------
 
 DICE = {
     D_GREEN:  f"{I_SWORD * 2}{I_SHIELD * 2}  ",
@@ -534,76 +485,25 @@ DICE = {
     D_BLACK:  f"{I_SWORD * 3}{I_SHIELD * 2} ",
 }
 
-QUESTS = {
-    'king': 0,
-            # 1 - Tried to revive him (portal opens)
-    'rats': 0, # 0 - Commander is about to give you money if rats are cleared
-               # 1 - You got the reward
-    'monk': 0, # 0 - Not talked to monk
-              # 1 - Quest to find brother
-              # 2 - Talked to brother
-    'ocean': 0,  # 0 - No boss
-                # 1 - Dropped bomb, boss appears
+ACTIONS = {
+    'attack': ('a', f"{S_FIGHT} [a]ttack"),
+    'retreat': ('r', f"{S_RETREAT} [r]etreat"),
+    'potion': ('p', f"{I_POTION} Drink [p]otion"),
+    'bandage': ('h', f"{I_BANDAGE} Apply [h]ealing bandage"),
+    'bomb': ('b', f"{I_BOMB} Throw a [b]omb ({3 * S_HIT} to target & {S_HIT} to you)"),
 }
 
-def save():
-    state = {}
-    state['name'] = name
-    state['backpack'] = backpack
-    state['level'] = level
-    state['location'] = location
-    state['visited'] = visited
-    state['health'] = health
-    state['xp'] = xp
-    state['equiped'] = equiped
-    state['QUESTS'] = QUESTS
-    state['MONSTER_CLEARED'] = MONSTER_CLEARED
 
-    with open('kop.sav', 'w') as fh:
-        json.dump(state, fh)
-
-    pause("Game Saved")
-
-def save_exists():
-    return os.path.isfile('kop.sav')
-
-def load():
-    print('LOAD"$",8,1')
-    global name, backpack, level, location, visited, health, backback_size, max_health, xp, equiped, QUESTS, MONSTER_CLEARED
-    state = {}
-    with open('kop.sav', 'r') as fh:
-        state = json.load(fh)
-
-    name = state['name']
-    backpack = state['backpack']
-    level = state['level']
-    location = state['location']
-    visited = state['visited']
-    health = state['health']
-    xp = state['xp']
-    # Else we would overwrite labels
-    for i, e in enumerate(state['equiped']):
-        equiped[i][2] = e[2]
-
-    backback_size = LEVELS['backpack'][level - 1]
-    max_health = LEVELS['health'][level - 1]
-    QUESTS = state['QUESTS']
-    MONSTER_CLEARED = state['MONSTER_CLEARED']
-
-    pause("Game Loaded")
-
-
-def increment_quest(name):
-    global QUESTS
-    QUESTS[name] += 1
-
+# -----------------------------------------------------------------------------
+# -- Story
+# -----------------------------------------------------------------------------
 
 LORE = lambda: {
     L_OCEAN: {
         'quest': {
             I_BOMB: [
                 f"""You drop the bomb into the ocean. The explosion creates a huge wave.
-                
+
 Soon after various dead sea creatures raise from the ocean.
 You can hear a loud scream. It pierces your ears - it is unbearable.
 
@@ -612,7 +512,7 @@ You might have enraged the queen of the sea."""
         },
         'cleared': [
             """\"She is dead! She is dead!\" screams Captain Ghur at you in joy.
-            
+
 He puts down his hat and looks sadly into the water.
 
 \"I will miss her singing.\"
@@ -621,7 +521,7 @@ He puts down his hat and looks sadly into the water.
         'story': [
             f"""You sail towards the open ocean.
 There is not much to see at this point, but an endless blue of water.
-            
+
 How possibly will you find the pearl out here, you ask yourself."""
         ]
     },
@@ -645,7 +545,7 @@ Let him know that I am alive and he still ows me three coins from our last gambl
         },
         'story': [
             f"""You enter a somewhat damaged old stonehouse.
-            
+
 Inside, the Gravedigger looks at you in terror.
 
 "If you are not one of these creatures, you can stay a while and listen."
@@ -709,13 +609,13 @@ You see other structures near by, but how will you reach them?
         },
         'cleared': [
             """The vampire turns into ashes. What's left is some of his gold and one of the pearls you seek.
-            
+
         The moment you touch the pearl you feel its magical power surrounding you."""
         ],
         'story': [
             """A dark place of evil. I has barely any light - only some moonlight shining through the crack in the
 ceiling onto the coffin in the middle of the room. But what lies within?
-        
+
 You amulet clearly points at the coffin. You approach it and slowly open the lid.
 The vampire king is sleeping inside the coffin. What will you do?"""
         ]
@@ -731,7 +631,7 @@ The vampire king is sleeping inside the coffin. What will you do?"""
         ],
         'story': [
             """This is a dark place. Whatever calls it home must be an evil spirit.
-            
+
 You can not easily see any monsters, but you feel their dead presence.
 But beyond those walls, you can sense an even more devilish force waiting for you.
 """
@@ -767,14 +667,14 @@ A bright light emerges from the sorcerer's body. You have to cover your eyes.
 "Did you think you could defeat me this easily?!" his voice becomes deeper while his body ascends from the ground.
 He seems to grow in size. Now you cam make it out - he turns into a black dragon.""",
 
-"""\"You shall burst into flames, human!\" He takes a big breath - a red fire can be seen as he opens his mouth towards you.
-You try to find cover but there is nothing around that could protect you.
-
-A burst of flames brightens the room. But it is not his fire. Out of nothing, Ghur the red dragon appeared. It immadiatly attacked the black dragon.
-
-\"May this be a lesson for you.\" exclaims Ghur after the black dragon turns to ashes. A most powerful light brigthen the space.
-
-You pass out."""
+            """\"You shall burst into flames, human!\" He takes a big breath - a red fire can be seen as he opens his mouth towards you.
+            You try to find cover but there is nothing around that could protect you.
+            
+            A burst of flames brightens the room. But it is not his fire. Out of nothing, Ghur the red dragon appeared. It immadiatly attacked the black dragon.
+            
+            \"May this be a lesson for you.\" exclaims Ghur after the black dragon turns to ashes. A most powerful light brigthen the space.
+            
+            You pass out."""
         ],
         'story': [
             """You enter what seems to be a secret space - it's black with small points of light in the distance.
@@ -783,7 +683,7 @@ Could these be stars?
 \"Who let you in?\" the sorcerer approaches you.
 
 "I must have underestimated the power of the pearls. How foolish of me. Well - since you entered a time and space that is hard to comprehend for a mere mortal like you - I might as well get rid of you. Would you be so kind to hand over the pearls of power?"
- 
+
 He reaches his hand towards you.
 
 "Fear not - you will perish either way."
@@ -856,14 +756,14 @@ Can it be the bridge is guarded by trolls? Indeed, these strong but not very cle
             """It seems like all the monsters have been defeated. The path is clear."""
         ],
         'story': [
-          """The endless fields with golden ripe crops have vanished.
-In its place a wet and stinking swamp terrorizes who wants to pass it.
-
-But the smell is the least of your problems. What you fail to see is that you are not alone. Large eyes cut through the puddles and observe every of your moves. You know these creatures! Toads, as large as humans! And who knows which other creatures hide here.
-
-You have to be on you guard if you want to make it through the swamps alive.
-"""
-      ]
+            """The endless fields with golden ripe crops have vanished.
+  In its place a wet and stinking swamp terrorizes who wants to pass it.
+  
+  But the smell is the least of your problems. What you fail to see is that you are not alone. Large eyes cut through the puddles and observe every of your moves. You know these creatures! Toads, as large as humans! And who knows which other creatures hide here.
+  
+  You have to be on you guard if you want to make it through the swamps alive.
+  """
+        ]
     },
     L_DESERT: {
         'obstacle': {
@@ -875,13 +775,13 @@ You have to be on you guard if you want to make it through the swamps alive.
             """The last scorpion is defeated. Maybe it is time to escape the desert."""
         ],
         'story': [
-          """You clothes dried quickly. The celebration does not hold for long, as the ground gets dry and starts to slowly yield to seemingly endless piles of sand.
-
-The sky clears and while the sun pierces your skin with its rays of fire you start to realize, that you landed in the desert.
-
-You can not tell where it ends - but strange and spikey poles catch your gaze in the distance. As these poles start to move in a random dance, you begin to realize that these are not poles, but the deadly tails of scorpions. This very special kind, however, is larger than anything you have seen before. What kind of dark magic surfaced monsters like these? There is no way, you think, to avoid combat here other than turning around.
-"""
-      ]
+            """You clothes dried quickly. The celebration does not hold for long, as the ground gets dry and starts to slowly yield to seemingly endless piles of sand.
+  
+  The sky clears and while the sun pierces your skin with its rays of fire you start to realize, that you landed in the desert.
+  
+  You can not tell where it ends - but strange and spikey poles catch your gaze in the distance. As these poles start to move in a random dance, you begin to realize that these are not poles, but the deadly tails of scorpions. This very special kind, however, is larger than anything you have seen before. What kind of dark magic surfaced monsters like these? There is no way, you think, to avoid combat here other than turning around.
+  """
+        ]
     },
     L_CAVE: {
         'obstacle': {
@@ -1003,7 +903,7 @@ Let me at least heal your wounds. If you spot him, please let me know and I will
             ],
             'brother': [
                 f"""You report of Vernal's wellbeing.
-                
+
 "Forgive me, but I am not sure I can believe you." replied Nordil in sadness.
 
 When asked if he remembers to pay his brother back three coins from their last gamble the monks eyes light up.
@@ -1019,7 +919,7 @@ He smiles, nods and leaves."""
     L_CASTLE: {
         'obstacle': {
             L_FOREST: [
-            f"""You can not pass before the drawbridge is lowered."""
+                f"""You can not pass before the drawbridge is lowered."""
             ],
         },
         'cleared': [
@@ -1045,13 +945,13 @@ And far out in the sky you can see the silhouette of a red dragon passing by.
 
             He sends a powerful blast your direction - you can barely dodge it. The sorcerer is gone, but it its place is a shining
             portal of some sort. It seems that having the pearls in reach keeps the portal open.
-            
+
             You feel that there might be no escape from where this portal leads. You better be prepared before entering.
             """
-            ],
+                     ],
             'rats': [
                 f"""You tell the commander that the rats are decimated by your actions.
-                
+
 "Well done! Now passage outside the castle is possible again. I do not recommend leaving to anyone but the most courageous.
 We heard reports of monsters blocking the path to the east.
 
@@ -1059,12 +959,12 @@ Take this - may it be of help on your journey.\""""
             ],
         },
         'story': [
-           f"""The castle drawbridge is lowered at your arrival. The guards already expect you, {name} - the famous adventurer. They escort you to the throne room, where the anxious king Balaar, ruler of the Kingdom of Pearls awaits you.
+            f"""The castle drawbridge is lowered at your arrival. The guards already expect you, {name} - the famous adventurer. They escort you to the throne room, where the anxious king Balaar, ruler of the Kingdom of Pearls awaits you.
            He explains his worries. The evil sorcerer, Xonius, threatened the king! He plans to takeover the rule. But even with his best man at the guard, the king fears for his life. Xonius is a powerful mage, who has the forbidden knowledge of dark magic. He can spawn an army of monsters, if only he would get hold of the king's magical crown, that hosts three pearls. 
 These pearls are known to have special powers, but the knowledge to unlock it has been lost.
 
 Within that moment, the glass windows of the throne room shattered. A dark cloud emerged, and Xonius stepped our of the cloud. """,
-f""""Guards!" shouted the king, but it was too late, as the sorcerer already spoke his magic spell and turned the king to stone, while hastily taking the crown off his majesty's head. The moment you tried to step in, Xonius disappeared again in the dark cloud.
+            f""""Guards!" shouted the king, but it was too late, as the sorcerer already spoke his magic spell and turned the king to stone, while hastily taking the crown off his majesty's head. The moment you tried to step in, Xonius disappeared again in the dark cloud.
 
 The magic lifted - and all that was left, is a king made of stone and shattered glass. But this should only be the beginning of the tragedy in the lands of the kingdom.
 
@@ -1078,7 +978,42 @@ Who will be brave enough to face the evil sorcerer, rescue the lands from the mo
         ]
     }
 }
+# -----------------------------------------------------------------------------
+# -- Global state
+# -----------------------------------------------------------------------------
+name = ""
+backpack = ""
+level = 0
+backpack_size = 0
+location = ""
+visited = []
+max_health = 0
+health = 0
+xp = 0
+equiped = [
+    ['l', "🇱 Left Hand", ""],
+    ['r', "🇷 Right Hand", ""],
+    ['a', "🖐️ Arms/Hands", ""],
+    ['f', "🦶 Feet", ""],
+    ['j', "🫳 Jewellery", ""],
+    ['h', "🧑 Head", ""],
+]
+quests = {
+    'king': 0,
+    # 1 - Tried to revive him (portal opens)
+    'rats': 0, # 0 - Commander is about to give you money if rats are cleared
+    # 1 - You got the reward
+    'monk': 0, # 0 - Not talked to monk
+    # 1 - Quest to find brother
+    # 2 - Talked to brother
+    'ocean': 0,  # 0 - No boss
+    # 1 - Dropped bomb, boss appears
+}
 
+
+# -----------------------------------------------------------------------------
+# -- Display
+# -----------------------------------------------------------------------------
 def wrap(text, length=50):
     new_text = []
     for line in text.split('\n'):
@@ -1096,7 +1031,6 @@ def wrap(text, length=50):
         else:
             new_text.append(line)
     return "\n".join(new_text)
-
 
 
 def lore(location, new_location=None, category='story', title='You entered the '):
@@ -1123,6 +1057,167 @@ O---------------------------------------------------------------O
         pause("\n")
 
 
+def clear():
+    # for windows
+    if os.name == 'nt':
+        _ = os.system('cls')
+
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = os.system('clear')
+
+
+def pause(text):
+    input(text + " (Press Enter to continue)")
+
+
+def intro():
+    print("""
+                     _   __ _____  _   _  _____ ______  _____ ___  ___    _____ ______  
+                    | | / /|_   _|| \ | ||  __ \|  _  \|  _  ||  \/  |   |  _  ||  ___| 
+                    | |/ /   | |  |  \| || |  \/| | | || | | || .  . |   | | | || |_    
+                    |    \   | |  | . ` || | __ | | | || | | || |\/| |   | | | ||  _|   
+                    | |\  \ _| |_ | |\  || |_\ \| |/ / \ \_/ /| |  | |   \ \_/ /| |     
+                    \_| \_/ \___/ \_| \_/ \____/|___/   \___/ \_|  |_/    \___/ \_|     
+                                                                                      
+                                                                                      
+                                ______  _____   ___  ______  _      _____               
+                                | ___ \|  ___| / _ \ | ___ \| |    /  ___|              
+                                | |_/ /| |__  / /_\ \| |_/ /| |    \ `--.               
+                                |  __/ |  __| |  _  ||    / | |     `--. \              
+                                | |    | |___ | | | || |\ \ | |____/\__/ /              
+                                \_|    \____/ \_| |_/\_| \_|\_____/\____/               
+    """)
+    print(29 * ' ' +"""\033[49m                        \033[38;2;96;204;227;49m▄▄▄\033[49m                       \033[m
+    \033[49m                    \033[38;2;251;242;56;49m▄\033[49m \033[38;2;99;185;203;49m▄\033[38;2;88;141;152;48;2;96;204;227m▄\033[48;2;99;185;203m \033[38;2;99;185;203;48;2;248;248;248m▄\033[38;2;202;218;252;48;2;248;248;248m▄\033[38;2;248;248;248;48;2;96;204;227m▄\033[38;2;96;204;227;49m▄\033[49m \033[38;2;251;242;56;49m▄\033[49m                   \033[m
+    \033[49m                   \033[49;38;2;251;242;56m▀\033[49m \033[48;2;195;162;30m \033[38;2;100;154;255;48;2;99;185;203m▄\033[38;2;92;110;224;48;2;88;141;152m▄\033[38;2;100;154;255;48;2;99;185;203m▄\033[38;2;88;141;152;48;2;99;185;203m▄\033[48;2;99;185;203m \033[38;2;99;185;203;48;2;202;218;252m▄\033[48;2;96;204;227m \033[48;2;251;242;56m \033[49m \033[49;38;2;251;242;56m▀\033[49m                  \033[m
+    \033[49m         \033[38;2;96;204;227;49m▄\033[38;2;99;185;203;48;2;96;204;227m▄\033[38;2;248;248;248;48;2;96;204;227m▄▄\033[38;2;96;204;227;49m▄\033[49m        \033[49;38;2;195;162;30m▀\033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;92;110;224m▄\033[48;2;100;154;255m \033[38;2;100;154;255;48;2;88;141;152m▄\033[38;2;251;242;56;48;2;99;185;203m▄\033[49;38;2;251;242;56m▀\033[49m         \033[38;2;96;204;227;49m▄\033[38;2;99;185;203;48;2;96;204;227m▄\033[38;2;248;248;248;48;2;96;204;227m▄▄\033[38;2;96;204;227;49m▄\033[49m       \033[m
+    \033[49m     \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;195;162;30;49m▄\033[48;2;99;185;203m \033[48;2;88;141;152m \033[48;2;99;185;203m  \033[38;2;99;185;203;48;2;202;218;252m▄\033[38;2;202;218;252;48;2;248;248;248m▄\033[48;2;96;204;227m \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;251;242;56;49m▄\033[49m   \033[38;2;95;73;68;49m▄\033[49m \033[49;38;2;195;162;30m▀\033[38;2;145;122;36;48;2;195;162;30m▄\033[38;2;145;122;36;48;2;251;242;56m▄\033[38;2;195;162;30;48;2;251;242;56m▄\033[49;38;2;251;242;56m▀\033[49m      \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;195;162;30;49m▄\033[48;2;99;185;203m \033[48;2;88;141;152m \033[48;2;99;185;203m  \033[38;2;99;185;203;48;2;202;218;252m▄\033[38;2;202;218;252;48;2;248;248;248m▄\033[48;2;96;204;227m \033[38;2;251;242;56;49m▄\033[49;38;2;251;242;56m▀\033[38;2;251;242;56;49m▄\033[49m   \033[m
+    \033[49m       \033[49;38;2;195;162;30m▀\033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;92;110;224m▄\033[38;2;92;110;224;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;88;141;152m▄\033[38;2;88;141;152;48;2;99;185;203m▄\033[48;2;99;185;203m \033[38;2;251;242;56;48;2;96;204;227m▄\033[49;38;2;251;242;56m▀\033[49m    \033[38;2;89;87;83;48;2;95;73;68m▄\033[38;2;131;125;134;48;2;95;73;68m▄\033[49m       \033[38;2;95;73;68;49m▄\033[48;2;95;73;68m \033[49m     \033[49;38;2;195;162;30m▀\033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;92;110;224m▄\033[38;2;92;110;224;48;2;100;154;255m▄\033[38;2;100;154;255;48;2;88;141;152m▄\033[38;2;88;141;152;48;2;99;185;203m▄\033[48;2;99;185;203m \033[38;2;251;242;56;48;2;96;204;227m▄\033[49;38;2;251;242;56m▀\033[49m     \033[m
+    \033[49m         \033[48;2;195;162;30m \033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;251;242;56;48;2;100;154;255m▄▄\033[48;2;251;242;56m \033[49m      \033[48;2;89;87;83m \033[48;2;131;125;134m \033[38;2;131;125;134;48;2;120;113;123m▄\033[38;2;131;125;134;49m▄\033[38;2;154;172;182;49m▄▄\033[38;2;95;73;68;49m▄\033[38;2;89;87;83;49m▄\033[38;2;95;73;68;49m▄\033[48;2;131;125;134m \033[38;2;131;125;134;48;2;154;172;182m▄\033[49m       \033[48;2;195;162;30m \033[38;2;195;162;30;48;2;100;154;255m▄\033[38;2;251;242;56;48;2;100;154;255m▄▄\033[48;2;251;242;56m \033[49m       \033[m
+    \033[49m          \033[49;38;2;145;122;36m▀▀\033[49;38;2;195;162;30m▀\033[49m       \033[38;2;89;87;83;48;2;95;73;68m▄\033[48;2;89;87;83m \033[38;2;131;125;134;48;2;113;107;116m▄\033[38;2;113;107;116;48;2;131;125;134m▄\033[38;2;131;125;134;48;2;113;107;116m▄\033[48;2;131;125;134m \033[38;2;131;125;134;48;2;120;113;123m▄\033[38;2;113;107;116;48;2;120;113;123m▄\033[38;2;89;87;83;48;2;95;73;68m▄\033[38;2;131;125;134;48;2;120;113;123m▄\033[48;2;154;172;182m \033[49m        \033[49;38;2;145;122;36m▀▀\033[49;38;2;195;162;30m▀\033[49m        \033[m
+    \033[49m                    \033[48;2;89;87;83m \033[48;2;95;73;68m \033[38;2;113;107;116;48;2;131;125;134m▄\033[48;2;131;125;134m \033[38;2;61;55;51;48;2;131;125;134m▄\033[38;2;61;55;51;48;2;89;87;83m▄\033[38;2;89;87;83;48;2;120;113;123m▄\033[48;2;120;113;123m \033[38;2;113;107;116;48;2;89;87;83m▄\033[48;2;131;125;134m \033[38;2;113;107;116;48;2;131;125;134m▄\033[49m                   \033[m
+    \033[49m                 \033[38;2;83;76;41;49m▄\033[38;2;61;89;95;49m▄▄\033[38;2;61;89;95;48;2;95;73;68m▄\033[38;2;61;89;95;48;2;89;87;83m▄\033[38;2;61;89;95;48;2;131;125;134m▄▄\033[38;2;95;62;85;48;2;61;55;51m▄▄\033[38;2;116;76;59;48;2;61;55;51m▄\033[38;2;61;89;95;48;2;120;113;123m▄\033[38;2;88;141;152;48;2;113;107;116m▄\033[38;2;83;76;41;48;2;131;125;134m▄\033[38;2;88;141;152;48;2;131;125;134m▄\033[38;2;61;89;95;49m▄\033[38;2;88;141;152;49m▄\033[38;2;76;105;50;49m▄\033[49m                \033[m
+    \033[49m        \033[38;2;83;76;41;49m▄▄▄\033[38;2;57;74;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄▄▄\033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;83;76;41m▄\033[38;2;83;76;41;48;2;61;89;95m▄\033[38;2;83;76;41;48;2;102;60;52m▄\033[38;2;116;76;59;48;2;76;105;50m▄\033[38;2;102;60;52;48;2;76;105;50m▄▄\033[38;2;102;60;52;48;2;95;62;85m▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;102;60;52;48;2;142;87;61m▄\033[38;2;116;76;59;48;2;61;89;95m▄\033[38;2;116;76;59;48;2;83;76;41m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m   \033[38;2;85;123;50;48;2;102;152;56m▄▄\033[38;2;85;123;50;49m▄▄▄\033[38;2;102;152;56;49m▄\033[49m          \033[m
+    \033[49m \033[38;2;83;76;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄\033[48;2;57;74;41m     \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;71;95;49;48;2;57;74;41m▄\033[38;2;116;76;59;48;2;71;95;49m▄\033[38;2;116;76;59;48;2;102;60;52m▄▄\033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄▄\033[38;2;76;105;50;48;2;116;76;59m▄▄\033[38;2;76;105;50;48;2;142;87;61m▄\033[38;2;76;105;50;48;2;116;76;59m▄\033[48;2;76;105;50m      \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄▄▄\033[38;2;85;123;50;48;2;76;105;50m▄\033[48;2;85;123;50m \033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄▄\033[38;2;85;123;50;48;2;102;152;56m▄\033[38;2;85;123;50;49m▄\033[38;2;102;152;56;49m▄\033[49m    \033[m
+    \033[48;2;57;74;41m   \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m    \033[38;2;57;74;41;48;2;71;95;49m▄\033[48;2;71;95;49m  \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m  \033[38;2;116;76;59;48;2;102;60;52m▄▄▄\033[38;2;116;76;59;48;2;76;105;50m▄▄▄▄\033[38;2;142;87;61;48;2;76;105;50m▄▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[m""".replace('\n', '\n' + ' ' * 25))
+    print("©2023 StateOffGames".center(100))
+
+# -----------------------------------------------------------------------------
+# -- Game
+# -----------------------------------------------------------------------------
+
+def main_menu():
+    while True:
+        clear()
+        intro()
+        options = get_main_options(with_new_game=True, with_save=False)
+        try:
+            action = get_action(options, "", "", False)
+            options[action][2]()
+        except InvalidSelection:
+            pause("I do not understand.")
+        else:
+            try:
+                loop()
+            except GameEnded:
+                pass
+
+
+
+def game_over(text):
+    print("""
+     _______  _______  __   __  _______    _______  __   __  _______  ______   
+    |       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  
+    |    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  
+    |   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ 
+    |   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |
+    |   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |
+    |_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|
+            """)
+    pause(text + "\n")
+    raise GameEnded
+
+
+def new_game():
+    global name, backpack, level, backpack_size, location, visited, max_health, health, xp
+
+    clear()
+    intro()
+
+    name = ""
+    while name.strip() == "":
+        name = input("What is the name of the hero? ")
+
+    if len(name) > 20:
+        name = name[:20]
+        pause(f"That's a long name. I will call you {name}")
+
+    print("Welcome", name, "on your great adventure!")
+    backpack = f"{I_POTION}{I_COIN * 2}" + (f"{I_BATTLE_AXE}{I_CROWN}{I_SHIELD}{I_BATTLE_AXE}{I_BOMB}{I_COIN * DEBUG_START_COINS}{I_PEARL * DEBUG_START_PEARL_COUNT}" if DEBUG_LARGE_INVENTORY else "")
+    level = DEBUG_START_LEVEL
+    backpack_size = LEVELS['backpack'][level - 1]
+    location = ""
+    visited = []
+    max_health = LEVELS['health'][level - 1]
+    health = max_health
+    xp = LEVELS['xp'][level - 1]
+
+
+def save():
+    state = {}
+    state['name'] = name
+    state['backpack'] = backpack
+    state['level'] = level
+    state['location'] = location
+    state['visited'] = visited
+    state['health'] = health
+    state['xp'] = xp
+    state['equiped'] = equiped
+    state['QUESTS'] = quests
+    state['MONSTER_CLEARED'] = MONSTER_CLEARED
+
+    with open('kop.sav', 'w') as fh:
+        json.dump(state, fh)
+
+    pause("Game Saved")
+
+
+def save_exists():
+    return os.path.isfile('kop.sav')
+
+
+def load():
+    print('LOAD"$",8,1')
+    global name, backpack, level, location, visited, health, backpack_size, max_health, xp, equiped, quests, MONSTER_CLEARED
+    state = {}
+    with open('kop.sav', 'r') as fh:
+        state = json.load(fh)
+
+    name = state['name']
+    backpack = state['backpack']
+    level = state['level']
+    location = state['location']
+    visited = state['visited']
+    health = state['health']
+    xp = state['xp']
+    # Else we would overwrite labels
+    for i, e in enumerate(state['equiped']):
+        equiped[i][2] = e[2]
+
+    backpack_size = LEVELS['backpack'][level - 1]
+    max_health = LEVELS['health'][level - 1]
+    quests = state['QUESTS']
+    MONSTER_CLEARED = state['MONSTER_CLEARED']
+
+    pause("Game Loaded")
+
+
+def increment_quest(name):
+    global quests
+    quests[name] += 1
+
+
 def pickup(item, condition=None):
     global backpack, location
     available = True
@@ -1133,6 +1228,7 @@ def pickup(item, condition=None):
         backpack += item
     else:
         lore(location, item, 'obstacle', 'You are stuck at the ')
+
 
 def goto(new_location, condition=None):
     global location, visited
@@ -1154,9 +1250,11 @@ def heal(added_health):
     health = min(max_health, health + added_health)
     pause("You feel refreshed!")
 
+
 def money():
     global backpack
     return backpack.count(I_COIN)
+
 
 def withdraw(count, item=I_COIN):
     global backpack
@@ -1164,13 +1262,13 @@ def withdraw(count, item=I_COIN):
 
 
 def buy(item, condition=None):
-    global prices, backpack
+    global PRICES, backpack
     available = True
     if condition:
         available = condition()
 
     if available:
-        price = prices[item]
+        price = PRICES[item]
         if money() < price:
             pause("☹️ Sorry! You don't have enough coins")
         else:
@@ -1189,14 +1287,15 @@ def roll(dice):
 
     return result
 
+
 def gain_xp(added_xp):
-    global xp, backback_size, max_health, level, health
+    global xp, backpack_size, max_health, level, health
     old_xp = xp
     xp += added_xp
 
     for new_level, level_xp in enumerate(LEVELS['xp']):
         if xp >= level_xp and new_level + 1 > level:
-            backback_size = LEVELS['backpack'][new_level]
+            backpack_size = LEVELS['backpack'][new_level]
             max_health = LEVELS['health'][new_level]
             health = max_health
             level = new_level + 1
@@ -1204,31 +1303,11 @@ def gain_xp(added_xp):
             break
 
 
-ACTIONS = {
-    'attack': ('a', f"{S_FIGHT} [a]ttack"),
-    'retreat': ('r', f"{S_RETREAT} [r]etreat"),
-    'potion': ('p', f"{I_POTION} Drink [p]otion"),
-    'bandage': ('h', f"{I_BANDAGE} Apply [h]ealing bandage"),
-    'bomb': ('b', f"{I_BOMB} Throw a [b]omb ({3 * S_HIT} to target & {S_HIT} to you)"),
-}
 
 def max_potions_usable():
     global level
     return (level+1) // 2
 
-
-def game_over(text):
-    print("""
-     _______  _______  __   __  _______    _______  __   __  _______  ______   
-    |       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  
-    |    ___||  |_|  ||       ||    ___|  |   _   ||  |_|  ||    ___||   | ||  
-    |   | __ |       ||       ||   |___   |  | |  ||       ||   |___ |   |_||_ 
-    |   ||  ||       ||       ||    ___|  |  |_|  ||       ||    ___||    __  |
-    |   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |
-    |_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|
-            """)
-    pause(text + "\n")
-    sys.exit(0)
 
 
 def fight(zone):
@@ -1236,7 +1315,7 @@ def fight(zone):
 
     potions_used = 0
     monster = random.choice(MONSTER_ZONES[zone])
-    values = monsters[monster]
+    values = MONSTERS[monster]
     monster_dice = f"{values[0] * D_PURPLE}{values[1] * D_BLACK}"
     monster_max_health = values[2]
     monster_health = values[2]
@@ -1384,6 +1463,7 @@ SEPARATOR_GO = (None, '\n' + f'{{ {S_COMPASS} GO }}'.center(SEPARATOR_LEN, '-'))
 SEPARATOR_DO = (None, '\n' + f'{{ {S_ACTION} DO }}'.center(SEPARATOR_LEN, '-'))
 SEPARATOR_BUY = (None, '\n' + f'{{ {S_BUY} BUY }}'.center(SEPARATOR_LEN, '-'))
 SEPARATOR_STATUS = (None, '\n' + f'{{ {S_STATUS} STATUS }}'.center(SEPARATOR_LEN, '-'))
+SEPARATOR_OPTIONS = (None, '\n' + f'{{ {S_OPTIONS} OPTIONS }}'.center(SEPARATOR_LEN, '-'))
 
 
 def monsters_cleared(zone):
@@ -1399,6 +1479,7 @@ def monsters_cleared(zone):
 BACKPACK_ONLY = 1
 EQUIPPED_ONLY = 2
 BACKPACK_OR_EQUIPPED = 3
+
 def has_items(item_counts, mode=BACKPACK_ONLY):
     global backpack, equiped
     has_all = True
@@ -1425,30 +1506,30 @@ LOCATION_OPTIONS = {
     L_CASTLE: [
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the shop", lambda: goto(L_SHOP)),
-        ('e', f"{S_EAST} [e]ast to the forest", lambda: goto(L_FOREST, lambda: QUESTS['rats'] == 1 and monsters_cleared(L_CASTLE) ), lambda: QUESTS['rats'] == 1 and monsters_cleared(L_CASTLE)),
-        ('s', f"{S_SOUTH} [s]outh through portal", lambda: goto(L_PORTAL, lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), lambda: QUESTS['king'] == 1 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
+        ('e', f"{S_EAST} [e]ast to the forest", lambda: goto(L_FOREST, lambda: quests['rats'] == 1 and monsters_cleared(L_CASTLE)), lambda: quests['rats'] == 1 and monsters_cleared(L_CASTLE)),
+        ('s', f"{S_SOUTH} [s]outh through portal", lambda: goto(L_PORTAL, lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), lambda: quests['king'] == 1 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
         SEPARATOR_DO,
-        ('k', f"{I_CROWN} Revive the [k]ing", lambda: [talk(L_CASTLE, 'king', lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), increment_quest('king')], lambda: QUESTS['king'] == 0 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
-        ('t', f"{S_TALK} [t]alk to the commander", lambda: talk(L_CASTLE, 'rats', lambda: [pickup(f"{I_COIN * 2}"), increment_quest('rats')]), lambda: QUESTS['rats'] == 0 and monsters_cleared(L_CASTLE), True),
+        ('k', f"{I_CROWN} Revive the [k]ing", lambda: [talk(L_CASTLE, 'king', lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), increment_quest('king')], lambda: quests['king'] == 0 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
+        ('t', f"{S_TALK} [t]alk to the commander", lambda: talk(L_CASTLE, 'rats', lambda: [pickup(f"{I_COIN * 2}"), increment_quest('rats')]), lambda: quests['rats'] == 0 and monsters_cleared(L_CASTLE), True),
         ('f', f"{S_FIGHT} [f]ight rats in cellar", lambda: fight(L_CASTLE), lambda: not monsters_cleared(L_CASTLE), True),
     ],
     L_CATHEDRAL: [
         SEPARATOR_GO,
         ('s', f"{S_SOUTH} [s]outh to the shop", lambda: goto(L_SHOP)),
         SEPARATOR_DO,
-        ('t', f"{S_TALK} [t]alk to the monk", lambda: talk(L_CATHEDRAL, 'monk', lambda: increment_quest('monk')), lambda: QUESTS['monk'] == 0, True),
-        ('t', f"{S_TALK} [t]alk to the monk", lambda: talk(L_CATHEDRAL, 'brother', lambda: [pickup(f"{I_AMULET}{I_COIN * 3}"), increment_quest('monk')]), lambda: QUESTS['monk'] == 2, True),
-        ('h', f"{S_WELL} [h]eal at the well", lambda: heal(max_health), lambda: QUESTS['monk'] >= 1, True),
+        ('t', f"{S_TALK} [t]alk to the monk", lambda: talk(L_CATHEDRAL, 'monk', lambda: increment_quest('monk')), lambda: quests['monk'] == 0, True),
+        ('t', f"{S_TALK} [t]alk to the monk", lambda: talk(L_CATHEDRAL, 'brother', lambda: [pickup(f"{I_AMULET}{I_COIN * 3}"), increment_quest('monk')]), lambda: quests['monk'] == 2, True),
+        ('h', f"{S_WELL} [h]eal at the well", lambda: heal(max_health), lambda: quests['monk'] >= 1, True),
     ],
     L_SHOP: [
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the cathedral", lambda: goto(L_CATHEDRAL)),
         ('s', f"{S_SOUTH} [s]outh to the castle", lambda: goto(L_CASTLE)),
         SEPARATOR_BUY,
-        ('S', f"{I_SWORD} Buy a [S]word (Effect: {ITEM_EFFECTS[I_SWORD]} Cost: {prices[I_SWORD]})", lambda: buy(I_SWORD)),
-        ('G', f"{I_GLOVES} Buy [G]loves (Effect: {ITEM_EFFECTS[I_GLOVES]} Cost: {prices[I_GLOVES]})", lambda: buy(I_GLOVES)),
-        ('H', f"{I_BANDAGE} Buy [H]ealing bandages (Effect: {S_HEART * 2} Cost: {prices[I_BANDAGE]})", lambda: buy(I_BANDAGE)),
-        ('E', f"{I_SHOES} Buy Sho[E] (Effect: 1x{I_SHOES} = {S_RETREAT} Monsters, 2x{I_SHOES} = {S_RETREAT} Bosses, Cost: {prices[I_SHOES]})",
+        ('S', f"{I_SWORD} Buy a [S]word (Effect: {ITEM_EFFECTS[I_SWORD]} Cost: {PRICES[I_SWORD]})", lambda: buy(I_SWORD)),
+        ('G', f"{I_GLOVES} Buy [G]loves (Effect: {ITEM_EFFECTS[I_GLOVES]} Cost: {PRICES[I_GLOVES]})", lambda: buy(I_GLOVES)),
+        ('H', f"{I_BANDAGE} Buy [H]ealing bandages (Effect: {S_HEART * 2} Cost: {PRICES[I_BANDAGE]})", lambda: buy(I_BANDAGE)),
+        ('E', f"{I_SHOES} Buy Sho[E] (Effect: 1x{I_SHOES} = {S_RETREAT} Monsters, 2x{I_SHOES} = {S_RETREAT} Bosses, Cost: {PRICES[I_SHOES]})",
          lambda: buy(I_SHOES), lambda: not has_items([(2, I_SHOES)], BACKPACK_OR_EQUIPPED), True),
     ],
     L_FOREST: [
@@ -1478,9 +1559,9 @@ LOCATION_OPTIONS = {
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the swamp", lambda: goto(L_SWAMP)),
         SEPARATOR_BUY,
-        ('B', f"{I_BOW} Buy a [B]ow (Effect: {ITEM_EFFECTS[I_BOW]} Cost: {prices[I_BOW]})", lambda: buy(I_BOW)),
-        ('P', f"{I_POTION} Buy a [P]otion (Effect: 1 Random Dice Cost: {prices[I_POTION]})", lambda: buy(I_POTION)),
-        ('O', f"{I_BOMB} Buy a B[O]mb (Effect: {3 * S_HIT} + {S_HIT} to self, Cost: {prices[I_BOMB]})", lambda: buy(I_BOMB)),
+        ('B', f"{I_BOW} Buy a [B]ow (Effect: {ITEM_EFFECTS[I_BOW]} Cost: {PRICES[I_BOW]})", lambda: buy(I_BOW)),
+        ('P', f"{I_POTION} Buy a [P]otion (Effect: 1 Random Dice Cost: {PRICES[I_POTION]})", lambda: buy(I_POTION)),
+        ('O', f"{I_BOMB} Buy a B[O]mb (Effect: {3 * S_HIT} + {S_HIT} to self, Cost: {PRICES[I_BOMB]})", lambda: buy(I_BOMB)),
     ],
     L_RUINS: [
         SEPARATOR_GO,
@@ -1501,11 +1582,11 @@ LOCATION_OPTIONS = {
         SEPARATOR_GO,
         ('w', f"{S_WEST} [w]west to the graveyard", lambda: goto(L_GRAVEYARD)),
         SEPARATOR_DO,
-        ('t', f"{S_TALK} [t]alk to the gravedigger", lambda: talk(L_GRAVEDIGGER, 'gravedigger', lambda: increment_quest('monk')), lambda: QUESTS['monk'] == 1, True),
+        ('t', f"{S_TALK} [t]alk to the gravedigger", lambda: talk(L_GRAVEDIGGER, 'gravedigger', lambda: increment_quest('monk')), lambda: quests['monk'] == 1, True),
         SEPARATOR_BUY,
         #('P', f"{I_PICKAXE} Buy [P]ickaxe ()", lambda: pickup(I_PICKAXE, lambda: monsters_cleared(L_LAIR)),
-        ('B', f"{I_BUCKET} Buy [B]ucket (Effect: {ITEM_EFFECTS[I_BUCKET]} Cost: {prices[I_BUCKET]})", lambda: buy(I_BUCKET), lambda: not has_items([(1, I_BUCKET)], BACKPACK_OR_EQUIPPED), True),
-        ('P', f"{I_PICKAXE} Buy [P]ickaxe (Effect: Digging Cost: {prices[I_PICKAXE]})",
+        ('B', f"{I_BUCKET} Buy [B]ucket (Effect: {ITEM_EFFECTS[I_BUCKET]} Cost: {PRICES[I_BUCKET]})", lambda: buy(I_BUCKET), lambda: not has_items([(1, I_BUCKET)], BACKPACK_OR_EQUIPPED), True),
+        ('P', f"{I_PICKAXE} Buy [P]ickaxe (Effect: Digging Cost: {PRICES[I_PICKAXE]})",
          lambda: buy(I_PICKAXE, lambda: monsters_cleared(L_LAIR)), lambda: not has_items([(1, I_PICKAXE)], BACKPACK_OR_EQUIPPED), True),
     ],
     L_TOMB: [
@@ -1548,8 +1629,8 @@ LOCATION_OPTIONS = {
         SEPARATOR_GO,
         ('w', f"{S_WEST} [w]est to sail back", lambda: goto(L_SHIP)),
         SEPARATOR_DO,
-        ('b', f"{I_BOMB} Drop [b]omb into ocean", lambda: [increment_quest('ocean'), withdraw(1, I_BOMB), lore(L_OCEAN, I_BOMB, 'quest', 'Sailing in the ')], lambda: I_BOMB in backpack and QUESTS['ocean'] == 0, True),
-        ('f', f"{S_FIGHT} [f]ight Boss", lambda: fight(L_OCEAN), lambda: not monsters_cleared(L_OCEAN) and QUESTS['ocean'] == 1, True),
+        ('b', f"{I_BOMB} Drop [b]omb into ocean", lambda: [increment_quest('ocean'), withdraw(1, I_BOMB), lore(L_OCEAN, I_BOMB, 'quest', 'Sailing in the ')], lambda: I_BOMB in backpack and quests['ocean'] == 0, True),
+        ('f', f"{S_FIGHT} [f]ight Boss", lambda: fight(L_OCEAN), lambda: not monsters_cleared(L_OCEAN) and quests['ocean'] == 1, True),
     ],
     L_CAVE: [
         SEPARATOR_GO,
@@ -1576,9 +1657,9 @@ LOCATION_OPTIONS = {
         SEPARATOR_GO,
         ('e', f"{S_EAST} [e]east to the mines", lambda: goto(L_MINES)),
         SEPARATOR_BUY,
-        ('X', f"{I_BATTLE_AXE} Buy a battle-a[X]e (Effect: {ITEM_EFFECTS[I_BATTLE_AXE]} Cost: {prices[I_BATTLE_AXE]})",
+        ('X', f"{I_BATTLE_AXE} Buy a battle-a[X]e (Effect: {ITEM_EFFECTS[I_BATTLE_AXE]} Cost: {PRICES[I_BATTLE_AXE]})",
          lambda: buy(I_BATTLE_AXE)),
-        ('D', f"{I_SHIELD} Buy a shiel[D] (Effect: {ITEM_EFFECTS[I_SHIELD]} Cost: {prices[I_SHIELD]})", lambda: buy(I_SHIELD)),
+        ('D', f"{I_SHIELD} Buy a shiel[D] (Effect: {ITEM_EFFECTS[I_SHIELD]} Cost: {PRICES[I_SHIELD]})", lambda: buy(I_SHIELD)),
     ],
     L_PORTAL: [
         #SEPARATOR_GO,
@@ -1610,7 +1691,7 @@ def status(event="", question="What would you like to do?"):
 {location.center(SEPARATOR_LEN)}
 {'*' * SEPARATOR_LEN}
 {S_STATUS} {name}
-🎒 Backpack: {backpack}{(backback_size-backpack_item_count) * I_EMPTY} ({backpack_item_count} / {backback_size} | {backpack.count(I_COIN)}x{I_COIN})
+🎒 Backpack: {backpack}{(backpack_size - backpack_item_count) * I_EMPTY} ({backpack_item_count} / {backpack_size} | {backpack.count(I_COIN)}x{I_COIN})
 {" | ".join(get_equiped(True))}
 {get_player_dice()}
 HEALTH: {health * S_HEART}{(max_health -  health) * S_HEART_EMPTY} ({int(0.5 + (health / max_health) * 100.0)}%)
@@ -1984,15 +2065,30 @@ def add_map_location(cur_loc, pos, tiles, handled_locations):
 
 
 
+def get_main_options(with_new_game=False, with_save=True):
+    options = [
+        SEPARATOR_OPTIONS,
+    ]
+    if with_new_game:
+        options.append(
+            ('NEW', f' {S_NEW} [NEW] game', lambda: new_game()),
+        )
+
+    if with_save:
+        options.append(
+            ('SAVE', f'{S_SAVE} [SAVE] game', lambda: save())
+        )
+
+    return options + [
+        ('LOAD', f'{S_LOAD} [LOAD] game', lambda: load(), lambda: save_exists(), True),
+        ('QUIT', f'{S_QUIT} [QUIT] game', lambda: sys.exit(0)),
+    ]
 
 def get_character_options():
     options = [
         SEPARATOR_STATUS,
         ('i', f'{S_INVENTORY} [i]nventory', lambda: show_inventory()),
         ('m', f'{S_MAP} [m]map', lambda: show_map()),
-        ('SAVE', f'{S_SAVE} [SAVE] game', lambda: save()),
-        ('LOAD', f'{S_LOAD} [LOAD] game', lambda: load(), lambda: save_exists(), True),
-        ('QUIT', f'{S_QUIT} [QUIT] game', lambda: sys.exit(0)),
     ]
 
     return options
@@ -2000,11 +2096,15 @@ def get_character_options():
 class InvalidSelection(Exception):
     pass
 
-def get_action(options, event="", question="What would you like to do?"):
-    if len(backpack) > backback_size:
-        drop_from_backpack(lambda: len(regex.findall(r'\X', backpack)) > backback_size)
+class GameEnded(Exception):
+    pass
 
-    status(event, question)
+def get_action(options, event="", question="What would you like to do?", with_status=True):
+    if len(backpack) > backpack_size:
+        drop_from_backpack(lambda: len(regex.findall(r'\X', backpack)) > backpack_size)
+
+    if with_status:
+        status(event, question)
 
     valid_options = []
     for option in options:
@@ -2045,18 +2145,22 @@ def get_action(options, event="", question="What would you like to do?"):
     except:
         raise InvalidSelection()
 
-goto(L_CASTLE)
-while True:
-    options = LOCATION_OPTIONS[location] + get_character_options()
-    try:
-        action = get_action(options)
-        # Display error on secret option selection
-        if len(options[action]) > 4 and not options[action][3]() and ( (callable(options[action][4] and not options[action][4]())) or not options[action][4]):
-                raise InvalidSelection
-        options[action][2]()
-    except InvalidSelection:
-        pause("I do not understand.")
+
+def loop():
+    goto(L_CASTLE)
+    while True:
+        options = LOCATION_OPTIONS[location] + get_character_options() + get_main_options()
+        try:
+            action = get_action(options)
+            # Display error on secret option selection
+            if len(options[action]) > 4 and not options[action][3]() and ( (callable(options[action][4] and not options[action][4]())) or not options[action][4]):
+                    raise InvalidSelection
+            options[action][2]()
+        except InvalidSelection:
+            pause("I do not understand.")
 
 
+if __name__ == '__main__':
+    main_menu()
 
 
