@@ -1,13 +1,35 @@
 # -*- coding: utf-8 -*-
+
+"""
+Kindom of Pearls
+- A text based adventure -
+
+©2023 StateOffGames
+
+Went overboard when doing programming exercises with my son.
+
+Installation:
+- Depends on/tested with Python 3.10
+- External modules: regex
+    pip install regex
+- Launch via:
+    main.py
+
+This games uses standard Unicode symbols. The console/font used greatly changes the experience.
+Tested with Kitty Terminal.
+"""
+
 import copy
 import json
 import math
-import textwrap
-from pprint import pprint
+import os
+import random
+import sys
 
 import regex
 
 
+# Cheaters, move on ...
 DEBUG_START_LEVEL = 1
 DEBUG_SHOW_COMPLETE_MAP = False #True
 DEBUG_LARGE_INVENTORY = False #True
@@ -15,81 +37,6 @@ DEBUG_START_PEARL_COUNT = 0
 DEBUG_START_COINS = 0
 DEBUG_MONSTERS_CLEARED = False
 DEBUG_BOSSES_CLEARED = False
-
-"""
-
-"""
-
-# TODO:
-# [X] Limit Backpack size
-# [X] Potion: Adds a random dice during fight
-# [X] 💣 Bomb: 2 Damage to Monster + 1 Damage to self
-# [X] 🩹 Heals 3 heart
-# [X] Limit items in shop (not needed for most items, due to equip system)
-# [X] Pearls and Wizzard
-# [X] Bug in mines ... wrong monsters?!!
-# XXX[ ] Shoes: One more Move per Turn + Two Shoes = two more moves.
-# [ ] 🔨 🟥 🟩
-# [X] 🪓 🟥 🟥
-# [X] 🏹  🟦 🟩
-# [X] 🧤 🟦
-# [X] 👑 🟨
-# [X] 💍 🟨
-# [X] Add monsters to specific locations
-# [X] Only move past location if there are no monsters
-# [X] GHOSTS in RUINS
-# [X] VAMPIRE: On hit gets heart back
-# [X] GIANT TOAD 🐸
-# [X] SPIDER 🕷️
-# [X] BATS 🦇
-# [X] SKELETON
-# [X] TROLL
-# [ ] RANDOM MONSTER WAITS ON RETREAT
-# [X] ZOMBIE only green dice
-# [X] SHARK
-# [ ] Mermaid (shield = damage)
-# [ ] EVIL SORCERER 🧙
-# [ ] Princess 👸 3x 🔮
-# [ ] Scroll to turn all dice into one color
-# [X] PICKAXE opens Dungeon
-# [X] Map Position >^<
-# [ ] Cave/Mines Story ...
-
-# GOAL:
-# - Defeat Vampire
-# - Defeat Mermaid
-# - Defeat Dragon
-# ---> Defeat Sorcerer
-# MAP
-# ---
-#        R-G-T-K+ (Crown)
-#        |
-# *C-F-B-S-D-B-U-C+ (Ring)
-#        |   |
-#        H   C-D-m-T+
-#                |
-#                B
-#
-# Graveyard (ZOMBIES)
-# Tomb (GHOST)
-# Kings Lair (VAMPIRE)
-# Castle START (RATS)
-# Forest (SNAKE)
-# Bridge (TROLL)
-# Swamp (TOAD)
-# Dessert (Scorpion)
-# RUINS (SPIDER)
-# Cave (BAT)
-# Dungeon (SKELETONS)
-# mines (DEMONS)
-# Mountain [T]op (DRAGON)
-# BEACH (SHARK)
-# UNDERWATER (OCTOPUS)
-# UNDERWATER-CITY (MERMAID)
-
-import os
-import random
-import sys
 
 I_EMPTY = "_"
 I_SWORD = "🗡️"
@@ -651,7 +598,7 @@ def increment_quest(name):
     QUESTS[name] += 1
 
 
-LORE = {
+LORE = lambda: {
     L_OCEAN: {
         'quest': {
             I_BOMB: [
@@ -1055,7 +1002,7 @@ Some reports came in that undead creates were spotted in that area. I am sick of
 Let me at least heal your wounds. If you spot him, please let me know and I will make sure that your effort will be rewarded beyond that.\""""
             ],
             'brother': [
-                f"""You report of Vernal wellbeing.
+                f"""You report of Vernal's wellbeing.
                 
 "Forgive me, but I am not sure I can believe you." replied Nordil in sadness.
 
@@ -1065,7 +1012,6 @@ When asked if he remembers to pay his brother back three coins from their last g
 
 He moves away, turns back and hands you three coins.
 "Take these, and make sure they end up with my brother."
-
 He smiles, nods and leaves."""
             ]
         }
@@ -1154,11 +1100,11 @@ def wrap(text, length=50):
 
 
 def lore(location, new_location=None, category='story', title='You entered the '):
-    if not location in LORE.keys():
+    if not location in LORE().keys():
         return
-    if category not in LORE[location].keys():
+    if category not in LORE()[location].keys():
         return
-    all_story_elements = LORE[location][category]
+    all_story_elements = LORE()[location][category]
     if new_location != None:
         all_story_elements = all_story_elements[new_location]
     for i, story in enumerate(all_story_elements):
@@ -1547,7 +1493,7 @@ LOCATION_OPTIONS = {
         SEPARATOR_GO,
         ('w', f"{S_WEST} [w]west to the ruins", lambda: goto(L_RUINS)),
         ('n', f"{S_NORTH} [n]orth to the tomb", lambda: goto(L_TOMB, lambda: monsters_cleared(L_GRAVEYARD)), lambda: monsters_cleared(L_GRAVEYARD)),
-        ('e', f"{S_EAST} [e]ast to gravedigger's house", lambda: goto(L_GRAVEDIGGER, lambda: monsters_cleared(L_GRAVEYARD)), lambda: monsters_cleared(L_GRAVEYARD)),
+        ('e', f"{S_EAST} [e]ast to the gravedigger's house", lambda: goto(L_GRAVEDIGGER, lambda: monsters_cleared(L_GRAVEYARD)), lambda: monsters_cleared(L_GRAVEYARD)),
         SEPARATOR_DO,
         ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_GRAVEYARD)),
     ],
