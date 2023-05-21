@@ -156,7 +156,7 @@ ITEM_EFFECTS = {
 
     I_BATTLE_AXE: (D_RED * 2),
     I_SHIELD: (2 * D_BLUE),
-    I_CROWN: (D_YELLOW * 2),
+    I_CROWN: (D_YELLOW + D_BLUE),
 
     I_SPELLBOOK: (D_YELLOW * 1),
     I_WAND: (D_YELLOW * 2),
@@ -632,8 +632,8 @@ The vampire king is sleeping inside the coffin. What will you do?"""
         'story': [
             """This is a dark place. Whatever calls it home must be an evil spirit.
 
-You can not easily see any monsters, but you feel their dead presence.
-But beyond those walls, you can sense an even more devilish force waiting for you.
+You can not see any monsters, but you feel their dead presence.
+Beyond those walls, you can sense an even more devilish force waiting for you. But you will need something to help you uncover its location.
 """
         ]
     },
@@ -665,12 +665,12 @@ There is no safe passage through the forest, without ridden it first of its beas
 A bright light emerges from the sorcerer's body. You have to cover your eyes.
 
 "Did you think you could defeat me this easily?!" his voice becomes deeper while his body ascends from the ground.
-He seems to grow in size. Now you cam make it out - he turns into a black dragon.""",
+He seems to grow in size. You start to recognize his shape - he turned into a black dragon.""",
 
             """\"You shall burst into flames, human!\" He takes a big breath - a red fire can be seen as he opens his mouth towards you.
             You try to find cover but there is nothing around that could protect you.
-            
-            A burst of flames brightens the room. But it is not his fire. Out of nothing, Ghur the red dragon appeared. It immadiatly attacked the black dragon.
+           
+            A burst of flames brightens the room. But it is not his fire. Out of nothing, Ghur the red dragon appeared. It immediately attacked the black dragon.
             
             \"May this be a lesson for you.\" exclaims Ghur after the black dragon turns to ashes. A most powerful light brigthen the space.
             
@@ -682,7 +682,7 @@ Could these be stars?
 
 \"Who let you in?\" the sorcerer approaches you.
 
-"I must have underestimated the power of the pearls. How foolish of me. Well - since you entered a time and space that is hard to comprehend for a mere mortal like you - I might as well get rid of you. Would you be so kind to hand over the pearls of power?"
+"I must have underestimated the power of the pearls. How foolish of me. Well, I might as well get rid of you here. Would you be so kind to hand over the pearls of power?"
 
 He reaches his hand towards you.
 
@@ -927,12 +927,12 @@ He smiles, nods and leaves."""
         ],
         'epilogue': [
             f"""You wake up back in the castle. The king and Nordil are sitting next to your bed. You can barely remember what happened.
-\"The hero is awake. {name}! Welcome back\" says the kind while holding your shoulder.
+\"The hero is awake. {name}! Welcome back\" says the king, while holding your shoulder.
 
 \"I owe you my kingdom. I owe you my life. From here on you shall be known as the third dragon.\"
 
-The group is led towards the castle's balcony, where the people all gathered to celebrate your victory.
-And far out in the sky you can see the silhouette of a red dragon passing by.            
+The group is led towards the castle's balcony, where the people from all the land gathered to celebrate your victory.
+And far out in the sky you can see the silhouette of a red dragon passing by. It may not be over yet ...        
 """
         ],
         'talk': {
@@ -943,8 +943,7 @@ And far out in the sky you can see the silhouette of a red dragon passing by.
 
             \"{name}, is it? You seem to have fought well. But this will not bring back your king. I am the ruler of this world now!\"
 
-            He sends a powerful blast your direction - you can barely dodge it. The sorcerer is gone, but it its place is a shining
-            portal of some sort. It seems that having the pearls in reach keeps the portal open.
+            He sends a powerful blast your direction - you can barely dodge it. The sorcerer is gone, but in his place stands a shining portal of some sort. It seems that having the pearls in reach keeps the portal open.
 
             You feel that there might be no escape from where this portal leads. You better be prepared before entering.
             """
@@ -1101,7 +1100,7 @@ def intro():
     \033[49m        \033[38;2;83;76;41;49m▄▄▄\033[38;2;57;74;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄▄▄\033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;83;76;41m▄\033[38;2;83;76;41;48;2;61;89;95m▄\033[38;2;83;76;41;48;2;102;60;52m▄\033[38;2;116;76;59;48;2;76;105;50m▄\033[38;2;102;60;52;48;2;76;105;50m▄▄\033[38;2;102;60;52;48;2;95;62;85m▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;102;60;52;48;2;142;87;61m▄\033[38;2;116;76;59;48;2;61;89;95m▄\033[38;2;116;76;59;48;2;83;76;41m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m   \033[38;2;85;123;50;48;2;102;152;56m▄▄\033[38;2;85;123;50;49m▄▄▄\033[38;2;102;152;56;49m▄\033[49m          \033[m
     \033[49m \033[38;2;83;76;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄\033[48;2;57;74;41m     \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;71;95;49;48;2;57;74;41m▄\033[38;2;116;76;59;48;2;71;95;49m▄\033[38;2;116;76;59;48;2;102;60;52m▄▄\033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄▄\033[38;2;76;105;50;48;2;116;76;59m▄▄\033[38;2;76;105;50;48;2;142;87;61m▄\033[38;2;76;105;50;48;2;116;76;59m▄\033[48;2;76;105;50m      \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄▄▄\033[38;2;85;123;50;48;2;76;105;50m▄\033[48;2;85;123;50m \033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄▄\033[38;2;85;123;50;48;2;102;152;56m▄\033[38;2;85;123;50;49m▄\033[38;2;102;152;56;49m▄\033[49m    \033[m
     \033[48;2;57;74;41m   \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m    \033[38;2;57;74;41;48;2;71;95;49m▄\033[48;2;71;95;49m  \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m  \033[38;2;116;76;59;48;2;102;60;52m▄▄▄\033[38;2;116;76;59;48;2;76;105;50m▄▄▄▄\033[38;2;142;87;61;48;2;76;105;50m▄▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[m""".replace('\n', '\n' + ' ' * 25))
-    print("©2023 StateOffGames".center(100))
+    print("©2023 StateOffGames".center(110))
 
 # -----------------------------------------------------------------------------
 # -- Game
@@ -1162,6 +1161,8 @@ def new_game():
     max_health = LEVELS['health'][level - 1]
     health = max_health
     xp = LEVELS['xp'][level - 1]
+
+    goto(L_CASTLE)
 
 
 def save():
@@ -1417,14 +1418,18 @@ def fight(zone):
             elif cmd == ACTIONS['bandage'][0]:
                 apply_bandage()
             elif cmd == ACTIONS['bomb'][0]:
+                msg = "The bomb exploded"
                 monster_damage = 3
+                if monster == E_SORCERER:
+                    monster_damage = 0
+                    msg = "The sorcerer is not affected by the bomb."
                 player_damage = 1
                 monster_health = max(0, monster_health - monster_damage)
                 health = max(0, health - player_damage)
                 backpack = backpack.replace(I_BOMB, "", 1)
                 print(f"PLAYER {player_damage * S_HIT}")
                 print(f"MONSTER {monster_damage * S_HIT}")
-                pause("The bomb exploded")
+                pause(msg)
             else:
                 pause("I do not understand.")
 
@@ -1594,7 +1599,7 @@ LOCATION_OPTIONS = {
         ('s', f"{S_SOUTH} [s]outh to the graveyard", lambda: goto(L_GRAVEYARD)),
         ('e', f"{S_EAST} [e]ast to the lair", lambda: goto(L_LAIR, lambda: monsters_cleared(L_TOMB)), lambda: has_items([(1, I_AMULET)], EQUIPPED_ONLY), True),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_TOMB)),
+        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_TOMB), lambda: not monsters_cleared(L_RUINS), True),
     ],
     L_LAIR: [
         SEPARATOR_GO,
@@ -2081,7 +2086,7 @@ def get_main_options(with_new_game=False, with_save=True):
 
     return options + [
         ('LOAD', f'{S_LOAD} [LOAD] game', lambda: load(), lambda: save_exists(), True),
-        ('QUIT', f'{S_QUIT} [QUIT] game', lambda: sys.exit(0)),
+        ('QUIT', f'{S_QUIT}   [QUIT] game', lambda: sys.exit(0)),
     ]
 
 def get_character_options():
@@ -2147,7 +2152,6 @@ def get_action(options, event="", question="What would you like to do?", with_st
 
 
 def loop():
-    goto(L_CASTLE)
     while True:
         options = LOCATION_OPTIONS[location] + get_character_options() + get_main_options()
         try:
