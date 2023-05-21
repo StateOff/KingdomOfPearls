@@ -12,7 +12,7 @@ Text based Adventure Roleplaying Game
 ```shell
 pip install virtualenv
 virtualenv _venv
-. _venv/Scripts/activate.ps1
+. _venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
