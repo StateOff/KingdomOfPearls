@@ -32,6 +32,7 @@ import regex
 # -----------------------------------------------------------------------------
 # -- DEBUG
 # -----------------------------------------------------------------------------
+VERSION = "0.5a"
 DEBUG_START_LEVEL = 1
 DEBUG_SHOW_COMPLETE_MAP = False #True
 DEBUG_LARGE_INVENTORY = False #True
@@ -65,6 +66,12 @@ I_BUCKET = "🪣"
 I_AMULET = "📿"
 
 I_NOT_DROPABLE = f"{I_COFFIN}{I_PEARL}{I_PICKAXE}{I_AMULET}"
+
+# Modes
+BACKPACK_ONLY = 1
+EQUIPPED_ONLY = 2
+BACKPACK_OR_EQUIPPED = 3
+
 
 PRICES = {
     I_SWORD: 3,
@@ -429,7 +436,7 @@ MONSTERS = {
     E_VAMPIRE: (1, 6, 8, 2500, f"{I_COIN * 6}{I_PEARL}", _reduce_all_damage_to_four, f"Vampire is quick! Only the first four attacks hit."),
     E_DRAGON: (8, 8, 25, 15000, f"{I_COIN * 6}{I_CROWN}{I_PEARL}", _no_magic_effect, f"Dragon is immune to {D_YELLOW}"),
 
-    E_SORCERER: (3, 3, 10, 20000, f"{I_COIN}", _random_damage, _random_damage_message),
+    E_SORCERER: (3, 3, 15, 20000, f"{I_COIN}", _random_damage, _random_damage_message),
 }
 
 MONSTER_ZONES = {
@@ -684,7 +691,7 @@ Could these be stars?
 
 "I must have underestimated the power of the pearls. How foolish of me. Well, I might as well get rid of you here. Would you be so kind to hand over the pearls of power?"
 
-He reaches his hand towards you.
+He reaches his hand towards you and mumbles some words. You are no longer in possession of the pearls.
 
 "Fear not - you will perish either way."
 """
@@ -1100,7 +1107,7 @@ def intro():
     \033[49m        \033[38;2;83;76;41;49m▄▄▄\033[38;2;57;74;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄▄▄\033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;83;76;41m▄\033[38;2;83;76;41;48;2;61;89;95m▄\033[38;2;83;76;41;48;2;102;60;52m▄\033[38;2;116;76;59;48;2;76;105;50m▄\033[38;2;102;60;52;48;2;76;105;50m▄▄\033[38;2;102;60;52;48;2;95;62;85m▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;102;60;52;48;2;142;87;61m▄\033[38;2;116;76;59;48;2;61;89;95m▄\033[38;2;116;76;59;48;2;83;76;41m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m   \033[38;2;85;123;50;48;2;102;152;56m▄▄\033[38;2;85;123;50;49m▄▄▄\033[38;2;102;152;56;49m▄\033[49m          \033[m
     \033[49m \033[38;2;83;76;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄\033[48;2;57;74;41m     \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;71;95;49;48;2;57;74;41m▄\033[38;2;116;76;59;48;2;71;95;49m▄\033[38;2;116;76;59;48;2;102;60;52m▄▄\033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄▄\033[38;2;76;105;50;48;2;116;76;59m▄▄\033[38;2;76;105;50;48;2;142;87;61m▄\033[38;2;76;105;50;48;2;116;76;59m▄\033[48;2;76;105;50m      \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄▄▄\033[38;2;85;123;50;48;2;76;105;50m▄\033[48;2;85;123;50m \033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄▄\033[38;2;85;123;50;48;2;102;152;56m▄\033[38;2;85;123;50;49m▄\033[38;2;102;152;56;49m▄\033[49m    \033[m
     \033[48;2;57;74;41m   \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m    \033[38;2;57;74;41;48;2;71;95;49m▄\033[48;2;71;95;49m  \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m  \033[38;2;116;76;59;48;2;102;60;52m▄▄▄\033[38;2;116;76;59;48;2;76;105;50m▄▄▄▄\033[38;2;142;87;61;48;2;76;105;50m▄▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[m""".replace('\n', '\n' + ' ' * 25))
-    print("©2023 StateOffGames".center(110))
+    print(f"©2023 StateOffGames - v{VERSION}".center(110))
 
 # -----------------------------------------------------------------------------
 # -- Game
@@ -1257,9 +1264,20 @@ def money():
     return backpack.count(I_COIN)
 
 
-def withdraw(count, item=I_COIN):
-    global backpack
-    backpack = backpack.replace(item, '', count)
+def withdraw(count, item=I_COIN, mode=BACKPACK_ONLY):
+    global backpack, equiped
+    if mode in (BACKPACK_ONLY, BACKPACK_OR_EQUIPPED):
+        old_len = regex.findall(r'\X', backpack).count(item)
+        backpack = backpack.replace(item, '', count)
+        new_len = regex.findall(r'\X', backpack).count(item)
+        count -= (old_len - new_len)
+    if mode in (EQUIPPED_ONLY, BACKPACK_OR_EQUIPPED):
+        for e in equiped:
+            old_len = regex.findall(r'\X', e[2]).count(item)
+            e[2] = e[2].replace(item, '', count)
+            new_len = regex.findall(r'\X', e[2]).count(item)
+            count -= (old_len - new_len)
+
 
 
 def buy(item, condition=None):
@@ -1481,10 +1499,6 @@ def monsters_cleared(zone):
 
 
 
-BACKPACK_ONLY = 1
-EQUIPPED_ONLY = 2
-BACKPACK_OR_EQUIPPED = 3
-
 def has_items(item_counts, mode=BACKPACK_ONLY):
     global backpack, equiped
     has_all = True
@@ -1512,7 +1526,7 @@ LOCATION_OPTIONS = {
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the shop", lambda: goto(L_SHOP)),
         ('e', f"{S_EAST} [e]ast to the forest", lambda: goto(L_FOREST, lambda: quests['rats'] == 1 and monsters_cleared(L_CASTLE)), lambda: quests['rats'] == 1 and monsters_cleared(L_CASTLE)),
-        ('s', f"{S_SOUTH} [s]outh through portal", lambda: goto(L_PORTAL, lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), lambda: quests['king'] == 1 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
+        ('s', f"{S_SOUTH} [s]outh through portal", lambda: [goto(L_PORTAL, lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), withdraw(3, I_PEARL, BACKPACK_OR_EQUIPPED)], lambda: quests['king'] == 1 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
         SEPARATOR_DO,
         ('k', f"{I_CROWN} Revive the [k]ing", lambda: [talk(L_CASTLE, 'king', lambda: has_items([(3, I_PEARL)], EQUIPPED_ONLY)), increment_quest('king')], lambda: quests['king'] == 0 and has_items([(3, I_PEARL)], EQUIPPED_ONLY), True),
         ('t', f"{S_TALK} [t]alk to the commander", lambda: talk(L_CASTLE, 'rats', lambda: [pickup(f"{I_COIN * 2}"), increment_quest('rats')]), lambda: quests['rats'] == 0 and monsters_cleared(L_CASTLE), True),
@@ -1796,6 +1810,7 @@ def unequip(part, slot):
     backpack += all_slots[slot]
     all_slots[slot] = ""
     equiped[part - 1][2] = "".join(all_slots)
+
 
 def equip_slot(part, slot):
     global backpack
