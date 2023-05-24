@@ -520,7 +520,7 @@ You might have enraged the queen of the sea."""
         'cleared': [
             """\"She is dead! She is dead!\" screams Captain Ghur at you in joy.
 
-He puts down his hat and looks sadly into the water.
+He puts down his hat and looks sadly into the water. 
 
 \"I will miss her singing.\"
 """
@@ -617,13 +617,13 @@ You see other structures near by, but how will you reach them?
         'cleared': [
             """The vampire turns into ashes. What's left is some of his gold and one of the pearls you seek.
 
-        The moment you touch the pearl you feel its magical power surrounding you."""
+        The moment you touch the pearl you feel its magical power surrounding you. But how can you unleash it?"""
         ],
         'story': [
             """A dark place of evil. I has barely any light - only some moonlight shining through the crack in the
 ceiling onto the coffin in the middle of the room. But what lies within?
 
-You amulet clearly points at the coffin. You approach it and slowly open the lid.
+Your amulet clearly points at the coffin. You approach it and slowly open the lid.
 The vampire king is sleeping inside the coffin. What will you do?"""
         ]
     },
@@ -807,10 +807,9 @@ Is this cave even going anywhere?"""
     L_BLACKSMITH: {
         'story': [
             """You sneak by one of the tunnels following a light. It leads to a magically sealed door. You knock.
-To your surprise a voice answeres:
+To your surprise a voice answers:
 
-"Who is it?" The door opens and reveals a dwarven blacksmith by the name of Thudur. He escaped the fate of his fellows
-by magic and has been living in part of the mines perfecting his craft.
+"Who is it?" The door opens and reveals a dwarven blacksmith by the name of Thudur. He escaped the fate of his fellows with magic and has been living in these parts of the mines perfecting his craft.
 """
         ]
     },
@@ -825,7 +824,7 @@ by magic and has been living in part of the mines perfecting his craft.
         ],
         'story': [
             """With the help of the pickaxe you clear the entrance behind the cave. It seems to lead to tunnels. Man-made but small.
-These must be old dwarfen mines. They seem abandoned and soon you realize why. Devilish magical creatures have invested the tunnels."""
+These must be old dwarfen mines. They seem abandoned and soon you realize why. Devilish magical creatures have infested the tunnels."""
         ]
     },
     L_SHIP: {
@@ -841,7 +840,7 @@ These must be old dwarfen mines. They seem abandoned and soon you realize why. D
             """You board an old ship that anchored close to the shore.
 The captain greets you.
 
-"I am captain Ghur! Yes THE captain Ghur. You are welcome to tell my stories."
+"I am captain Ghur! Yes, THE captain Ghur. You are welcome to tell my stories."
 He smiles revealing teath of silver. 
 
 "I wish I could help your travels, but since a terrible sea creature started its reign over the sea we can not move.
@@ -1318,7 +1317,7 @@ def gain_xp(added_xp):
             max_health = LEVELS['health'][new_level]
             health = max_health
             level = new_level + 1
-            pause(f"YOU REACHED LEVEL {level}! You feel stronger!")
+            pause(f"{S_NORTH} YOU REACHED LEVEL {level}! You feel stronger!")
             break
 
 
@@ -1611,9 +1610,9 @@ LOCATION_OPTIONS = {
     L_TOMB: [
         SEPARATOR_GO,
         ('s', f"{S_SOUTH} [s]outh to the graveyard", lambda: goto(L_GRAVEYARD)),
-        ('e', f"{S_EAST} [e]ast to the lair", lambda: goto(L_LAIR, lambda: monsters_cleared(L_TOMB)), lambda: has_items([(1, I_AMULET)], EQUIPPED_ONLY), True),
+        ('e', f"{S_EAST} [e]ast to the lair", lambda: goto(L_LAIR, lambda: monsters_cleared(L_TOMB)), lambda: has_items([(1, I_AMULET)], EQUIPPED_ONLY) or L_LAIR in visited, True),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_TOMB), lambda: monsters_cleared(L_RUINS), True),
+        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_TOMB), lambda: not monsters_cleared(L_TOMB), True),
     ],
     L_LAIR: [
         SEPARATOR_GO,
@@ -1654,7 +1653,7 @@ LOCATION_OPTIONS = {
     L_CAVE: [
         SEPARATOR_GO,
         ('n', f"{S_NORTH} [n]orth to the beach", lambda: goto(L_BEACH)),
-        ('s', f"{S_SOUTH} [s]outh to the mines", lambda: goto(L_MINES, lambda: monsters_cleared(L_CAVE)), lambda: monsters_cleared(L_CAVE) and has_items([(1, I_PICKAXE)], EQUIPPED_ONLY), lambda: not has_items([(1, I_PICKAXE)], EQUIPPED_ONLY)),
+        ('s', f"{S_SOUTH} [s]outh to the mines", lambda: goto(L_MINES, lambda: monsters_cleared(L_CAVE)), lambda: monsters_cleared(L_CAVE) and (has_items([(1, I_PICKAXE)], EQUIPPED_ONLY) or L_MINES in visited), lambda: not has_items([(1, I_PICKAXE)], EQUIPPED_ONLY)),
         SEPARATOR_DO,
         ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_CAVE)),
     ],
