@@ -32,7 +32,7 @@ import regex
 # -----------------------------------------------------------------------------
 # -- DEBUG
 # -----------------------------------------------------------------------------
-VERSION = "0.5a"
+VERSION = "0.6a"
 DEBUG_START_LEVEL = 1
 DEBUG_SHOW_COMPLETE_MAP = False #True
 DEBUG_LARGE_INVENTORY = False #True
@@ -1613,7 +1613,7 @@ LOCATION_OPTIONS = {
         ('s', f"{S_SOUTH} [s]outh to the graveyard", lambda: goto(L_GRAVEYARD)),
         ('e', f"{S_EAST} [e]ast to the lair", lambda: goto(L_LAIR, lambda: monsters_cleared(L_TOMB)), lambda: has_items([(1, I_AMULET)], EQUIPPED_ONLY), True),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_TOMB), lambda: not monsters_cleared(L_RUINS), True),
+        ('f', f"{S_FIGHT} [f]ight Monster", lambda: fight(L_TOMB), lambda: monsters_cleared(L_RUINS), True),
     ],
     L_LAIR: [
         SEPARATOR_GO,
