@@ -418,7 +418,7 @@ MONSTERS = {
     E_SKELETON: (2, 3, 3, 250, f"{I_POTION * 1}", _default_damage, ""),
     E_ZOMBIE: (3, 1, 4, 350, f"{I_COIN * 1}", _green_damage_only, f"Only {D_GREEN} basic attacks are effective against Zombies"),
     E_GHOST: (0, 5, 3, 400, f"{I_POTION * 1}", _reduce_all_damage_to_two,
-              f"{S_MISS} Hard to hit. Ghosts only receive the first two hit!"),
+              f"{S_MISS} Hard to hit. Ghosts only receive the first two hits!"),
 
     E_SCORPION: (3, 6, 5, 400, f"{I_COIN}", _default_damage, ""),
     E_BAT: (7, 5, 5, 500, "", _default_damage, ""),
@@ -691,7 +691,7 @@ Could these be stars?
 
 "I must have underestimated the power of the pearls. How foolish of me. Well, I might as well get rid of you here. Would you be so kind to hand over the pearls of power?"
 
-He reaches his hand towards you and mumbles some words. You are no longer in possession of the pearls.
+He reaches his hand towards you and mumbles some words. You are no longer in possession of the pearls. The portal closed.
 
 "Fear not - you will perish either way."
 """
@@ -820,7 +820,7 @@ To your surprise a voice answers:
             ],
         },
         'cleared': [
-            """The voices silenced. You can now clearly hear a slow and loud breating."""
+            """The magical voices silenced. You can clearly hear a slow and loud breathing."""
         ],
         'story': [
             """With the help of the pickaxe you clear the entrance behind the cave. It seems to lead to tunnels. Man-made but small.
