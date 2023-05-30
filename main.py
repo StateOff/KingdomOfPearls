@@ -1112,8 +1112,6 @@ def wrap(text, length=50):
 
 
 def lore(location, new_location=None, category='story', title='You entered the '):
-    if category == 'epilogue':
-        play_music('epilogue')
 
     if not location in LORE().keys():
         return
@@ -1215,7 +1213,7 @@ def game_over(text):
     |   |_| ||   _   || ||_|| ||   |___   |       | |     | |   |___ |   |  | |
     |_______||__| |__||_|   |_||_______|  |_______|  |___|  |_______||___|  |_|
             """)
-    pause(text + "\n")
+    pause(text.center(77) + "\n")
     raise GameEnded
 
 
@@ -1768,7 +1766,7 @@ LOCATION_OPTIONS = {
         #SEPARATOR_GO,
         #('n', f"{S_NORTH} [n]orth to the castle", lambda: goto(L_CASTLE)),
         SEPARATOR_DO,
-        ('f', f"{S_FIGHT} [f]ight Evil Sorcerer", lambda: [fight(L_PORTAL), lore(L_CASTLE, None, 'epilogue', 'Epilogue at the '), game_over("A new adventure awaits ...")], lambda: not monsters_cleared(L_PORTAL), True),
+        ('f', f"{S_FIGHT} [f]ight Evil Sorcerer", lambda: [fight(L_PORTAL), play_music('epilogue'), lore(L_CASTLE, None, 'epilogue', 'Epilogue at the '), game_over("A new adventure awaits ...")], lambda: not monsters_cleared(L_PORTAL), True),
     ]
 }
 
@@ -1801,10 +1799,10 @@ HEALTH: {health * S_HEART}{(max_health -  health) * S_HEART_EMPTY} ({int(0.5 + (
 LEVEL: {level}
 XP: {xp} / {LEVELS['xp'][level]}
 {'*' * SEPARATOR_LEN}
-{event}
-+-{'-' * len(question)}-+
-| {question} |
-+-{'-' * len(question)}-+""")
+{event}""")
+    print(f"+-{'-' * len(question)}-+".center(50))
+    print(f"| {question} |".center(50))
+    print(f"+-{'-' * len(question)}-+".center(50))
 
 
 def drop_from_backpack(exit_condition=None, message="Too much load"):
