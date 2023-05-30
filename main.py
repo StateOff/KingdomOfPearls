@@ -6,6 +6,9 @@ Kindom of Pearls
 
 ©2023 StateOffGames
 
+Music: David Renda & David Fesliyan
+Royalty free music from https://www.FesliyanStudios.com
+
 Went overboard when doing programming exercises with my son.
 
 Installation:
@@ -28,11 +31,53 @@ import sys
 
 import regex
 
+WITH_MUSIC = True
+CUSTOM_DRAWING = False
+
+MUSIC = {
+    'home': '2019-08-25_-_8bit-Smooth_Presentation_-_David_Fesliyan.mp3',
+    'adventure': '2019-12-09_-_Retro_Forest_-_David_Fesliyan.mp3',
+    'boss': 'slow-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3',
+    'epilogue': '2021-08-17_-_8_Bit_Nostalgia_-_www.FesliyanStudios.com.mp3',
+    'gameover': 'stinger-2021-08-17_-_8_Bit_Nostalgia_-_www.FesliyanStudios.com.mp3',
+    'success': 'stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3',
+}
+
+if CUSTOM_DRAWING:
+    from terminal import print, input, clear
+else:
+    def clear():
+        # for windows
+        if os.name == 'nt':
+            _ = os.system('cls')
+
+        # for mac and linux(here, os.name is 'posix')
+        else:
+            _ = os.system('clear')
+
+
+if WITH_MUSIC:
+    import pygame
+    pygame.init()
+    pygame.mixer.init()
+
+    def play_music(name, repeat=-1):
+        global music
+        if name == music:
+            return
+        music = name
+
+        pygame.mixer.music.stop()
+        pygame.mixer.music.load(MUSIC[name])
+        pygame.mixer.music.play(repeat)
+else:
+    def play_music(name, repeat=-1):
+        pass
 
 # -----------------------------------------------------------------------------
 # -- DEBUG
 # -----------------------------------------------------------------------------
-VERSION = "0.6a"
+VERSION = "0.7a"
 DEBUG_START_LEVEL = 1
 DEBUG_SHOW_COMPLETE_MAP = False #True
 DEBUG_LARGE_INVENTORY = False #True
@@ -507,6 +552,7 @@ ACTIONS = {
 
 LORE = lambda: {
     L_OCEAN: {
+        'music': 'adventure',
         'quest': {
             I_BOMB: [
                 f"""You drop the bomb into the ocean. The explosion creates a huge wave.
@@ -533,6 +579,7 @@ How possibly will you find the pearl out here, you ask yourself."""
         ]
     },
     L_GRAVEDIGGER: {
+        'music': 'home',
         'obstacle': {
             I_PICKAXE: [
                 f"""The gravedigger looks at you with a scared look.
@@ -568,6 +615,7 @@ Vernal has seen it hiding in its lair, somewhere within the tomb. But he does no
         ]
     },
     L_RUINS: {
+        'music': 'adventure',
         'obstacle': {
             L_GRAVEYARD: [
                 f"""The spiders are in your way."""
@@ -589,6 +637,7 @@ You expect the worst.
         ]
     },
     L_GRAVEYARD: {
+        'music': 'adventure',
         'obstacle': {
             L_GRAVEDIGGER: [
                 f"""A small stonehouse is next to the graveyard. You see a candle lit, but you can not reach it, with all these undead monsters around."""
@@ -609,6 +658,7 @@ You see other structures near by, but how will you reach them?
         ]
     },
     L_LAIR: {
+        'music': 'adventure',
         'obstacle': {
             I_COFFIN: [
                 f"""You try to take the coffin, but the vampire is blocking you."""
@@ -628,6 +678,7 @@ The vampire king is sleeping inside the coffin. What will you do?"""
         ]
     },
     L_TOMB: {
+        'music': 'adventure',
         'obstacle': {
             L_LAIR: [
                 f"""The amulet seems to show you the way to the evil's lair, but the surrounding monsters do not let you through."""
@@ -645,6 +696,7 @@ Beyond those walls, you can sense an even more devilish force waiting for you. B
         ]
     },
     L_FOREST: {
+        'music': 'adventure',
         'obstacle': {
             L_BRIDGE: [
                 f"""The snakes are in your way."""
@@ -666,6 +718,7 @@ There is no safe passage through the forest, without ridden it first of its beas
         ]
     },
     L_PORTAL: {
+        'music': 'adventure',
         'cleared': [
             """With your hit the sorcerer falls to the ground. You have defeated the evil force.
             The lights in the room seem to diminish. Victory! It is time to break the evil spell and revive the king.
@@ -698,6 +751,7 @@ He reaches his hand towards you and mumbles some words. You are no longer in pos
         ],
     },
     L_VULCANO: {
+        'music': 'adventure',
         'obstacle': {
             L_BRIDGE: [
                 f"""The snakes are in your way."""
@@ -727,6 +781,7 @@ The dragon stands up and now you can clearly see its full size! It spreads his w
         ]
     },
     L_BRIDGE: {
+        'music': 'adventure',
         'obstacle': {
             L_SWAMP: [
                 f"""There is not a chance you can sneak by a Troll."""
@@ -748,6 +803,7 @@ Can it be the bridge is guarded by trolls? Indeed, these strong but not very cle
         ]
     },
     L_SWAMP: {
+        'music': 'adventure',
         'obstacle': {
             L_HUT: [
                 f"""The hut is within a small lake. Without a boat\nof some kind, you will not be able to reach it."""
@@ -773,6 +829,7 @@ Can it be the bridge is guarded by trolls? Indeed, these strong but not very cle
         ]
     },
     L_DESERT: {
+        'music': 'adventure',
         'obstacle': {
             L_BEACH: [
                 f"""The beach seems near, but the monsters do not let you through."""
@@ -791,6 +848,7 @@ Can it be the bridge is guarded by trolls? Indeed, these strong but not very cle
         ]
     },
     L_CAVE: {
+        'music': 'adventure',
         'obstacle': {
             L_MINES: [
                 f"""There seems to be a passage, but it is blocked. With the right tool and no creatures around you might get through."""
@@ -805,6 +863,7 @@ Is this cave even going anywhere?"""
         ]
     },
     L_BLACKSMITH: {
+        'music': 'home',
         'story': [
             """You sneak by one of the tunnels following a light. It leads to a magically sealed door. You knock.
 To your surprise a voice answers:
@@ -814,6 +873,7 @@ To your surprise a voice answers:
         ]
     },
     L_MINES: {
+        'music': 'adventure',
         'obstacle': {
             L_VULCANO: [
                 f"""You feel a powerful presence behind these walls. But in order to reveal it you have to get past these magical creatures."""
@@ -828,6 +888,7 @@ These must be old dwarfen mines. They seem abandoned and soon you realize why. D
         ]
     },
     L_SHIP: {
+        'music': 'adventure',
         'obstacle': {
             L_OCEAN: [
                 f"""You can not sail with the sea monsters endangering your voyage."""
@@ -848,6 +909,7 @@ Monsters of incredible size hinder us from save sailing. They seem to serve thei
         ]
     },
     L_BEACH: {
+        'music': 'adventure',
         'obstacle': {
             L_SHIP: [
                 f"""You need a boat and a clear path to board the ship."""
@@ -868,6 +930,7 @@ But in order to come closer to the shore, you need to fight your way through mon
         ]
     },
     L_SHOP: {
+        'music': 'home',
         'story': [
             """As you enter the castle's shop, the merchant immediately approaches you.
 Stroking his long beard and mustering you from head to toe, he asks:
@@ -876,12 +939,14 @@ Stroking his long beard and mustering you from head to toe, he asks:
         ]
     },
     L_HUT: {
+        'music': 'home',
         'story': [
             """You put the coffin onto the lake and jump in. It may not be a boat but it seems like a common way to
 travel in swamps."""
         ]
     },
     L_CATHEDRAL: {
+        'music': 'home',
         'story': [
             f"""The tallest building in the center of the castle is an old cathedral.
 The moment you enter you smell herbs and incense. You approach the altar, next to a large well.
@@ -923,6 +988,7 @@ He smiles, nods and leaves."""
         }
     },
     L_CASTLE: {
+        'music': 'home',
         'obstacle': {
             L_FOREST: [
                 f"""You can not pass before the drawbridge is lowered."""
@@ -995,6 +1061,7 @@ visited = []
 max_health = 0
 health = 0
 xp = 0
+music = ""
 equiped = [
     ['l', "🇱 Left Hand", ""],
     ['r', "🇷 Right Hand", ""],
@@ -1039,6 +1106,9 @@ def wrap(text, length=50):
 
 
 def lore(location, new_location=None, category='story', title='You entered the '):
+    if category == 'epilogue':
+        play_music('epilogue')
+
     if not location in LORE().keys():
         return
     if category not in LORE()[location].keys():
@@ -1062,14 +1132,6 @@ O---------------------------------------------------------------O
         pause("\n")
 
 
-def clear():
-    # for windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-
-    # for mac and linux(here, os.name is 'posix')
-    else:
-        _ = os.system('clear')
 
 
 def pause(text):
@@ -1107,12 +1169,17 @@ def intro():
     \033[49m \033[38;2;83;76;41;49m▄▄\033[38;2;57;74;41;48;2;83;76;41m▄\033[48;2;57;74;41m     \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;71;95;49;48;2;57;74;41m▄\033[38;2;116;76;59;48;2;71;95;49m▄\033[38;2;116;76;59;48;2;102;60;52m▄▄\033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄▄\033[38;2;76;105;50;48;2;116;76;59m▄▄\033[38;2;76;105;50;48;2;142;87;61m▄\033[38;2;76;105;50;48;2;116;76;59m▄\033[48;2;76;105;50m      \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄▄▄\033[38;2;85;123;50;48;2;76;105;50m▄\033[48;2;85;123;50m \033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄▄\033[38;2;85;123;50;48;2;102;152;56m▄\033[38;2;85;123;50;49m▄\033[38;2;102;152;56;49m▄\033[49m    \033[m
     \033[48;2;57;74;41m   \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;57;74;41m \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m    \033[38;2;57;74;41;48;2;71;95;49m▄\033[48;2;71;95;49m  \033[38;2;71;95;49;48;2;57;74;41m▄\033[48;2;71;95;49m \033[38;2;62;81;42;48;2;102;60;52m▄\033[38;2;62;81;42;48;2;116;76;59m▄▄\033[38;2;102;60;52;48;2;116;76;59m▄\033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m \033[38;2;142;87;61;48;2;116;76;59m▄\033[48;2;116;76;59m  \033[38;2;116;76;59;48;2;102;60;52m▄▄▄\033[38;2;116;76;59;48;2;76;105;50m▄▄▄▄\033[38;2;142;87;61;48;2;76;105;50m▄▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m \033[38;2;85;123;50;48;2;76;105;50m▄\033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;76;105;50m  \033[38;2;76;105;50;48;2;85;123;50m▄\033[48;2;85;123;50m \033[38;2;76;105;50;48;2;85;123;50m▄\033[m""".replace('\n', '\n' + ' ' * 25))
     print(f"©2023 StateOffGames - v{VERSION}".center(110))
+    if WITH_MUSIC:
+        print("Royalty free music from https://www.FesliyanStudios.com".center(110))
 
 # -----------------------------------------------------------------------------
 # -- Game
 # -----------------------------------------------------------------------------
 
 def main_menu():
+
+    play_music('home')
+
     while True:
         clear()
         intro()
@@ -1126,11 +1193,13 @@ def main_menu():
             try:
                 loop()
             except GameEnded:
+                play_music('home')
                 pass
 
 
 
 def game_over(text):
+    play_music('gameover', 1)
     print("""
      _______  _______  __   __  _______    _______  __   __  _______  ______   
     |       ||   _   ||  |_|  ||       |  |       ||  | |  ||       ||    _ |  
@@ -1204,7 +1273,6 @@ def load():
     name = state['name']
     backpack = state['backpack']
     level = state['level']
-    location = state['location']
     visited = state['visited']
     health = state['health']
     xp = state['xp']
@@ -1216,8 +1284,8 @@ def load():
     max_health = LEVELS['health'][level - 1]
     quests = state['QUESTS']
     MONSTER_CLEARED = state['MONSTER_CLEARED']
-
     pause("Game Loaded")
+    goto(state['location'])
 
 
 def increment_quest(name):
@@ -1245,6 +1313,7 @@ def goto(new_location, condition=None):
 
     if available:
         location = new_location
+        play_music(LORE()[location]['music'])
         if location not in visited:
             lore(location)
             visited.append(new_location)
@@ -1333,6 +1402,10 @@ def fight(zone):
 
     potions_used = 0
     monster = random.choice(MONSTER_ZONES[zone])
+
+    if monster in BOSSES:
+        play_music('boss')
+
     values = MONSTERS[monster]
     monster_dice = f"{values[0] * D_PURPLE}{values[1] * D_BLACK}"
     monster_max_health = values[2]
@@ -1424,6 +1497,7 @@ def fight(zone):
                 pause("")
             elif cmd == ACTIONS['retreat'][0]:
                 # Retreat!
+                play_music(LORE()[location]['music'])
                 return
             elif cmd == ACTIONS['potion'][0]:
                 potions_used += 1
@@ -1455,11 +1529,16 @@ def fight(zone):
     if monster_health == 0:
         old_clear_count = MONSTER_CLEARED[zone]
         MONSTER_CLEARED[zone] = max(0, MONSTER_CLEARED[zone] - 1)
+        if monster in BOSSES:
+            play_music('success', 1)
         pause(f'THE MONSTER IS DEFEATED{". YOU FOUND " if monster_loot else ""}{monster_loot}. GAINED {monster_xp} XP')
         gain_xp(monster_xp)
         backpack += monster_loot
         if old_clear_count > 0 and MONSTER_CLEARED[zone] == 0:
+            play_music('success', 1)
             lore(location, None, 'cleared', 'You cleared the ')
+
+        play_music(LORE()[location]['music'])
 
 
 
