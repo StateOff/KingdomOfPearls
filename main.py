@@ -35,12 +35,12 @@ WITH_MUSIC = True
 CUSTOM_DRAWING = False
 
 MUSIC = {
-    'home': '2019-08-25_-_8bit-Smooth_Presentation_-_David_Fesliyan.mp3',
-    'adventure': '2019-12-09_-_Retro_Forest_-_David_Fesliyan.mp3',
-    'boss': 'slow-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3',
-    'epilogue': '2021-08-17_-_8_Bit_Nostalgia_-_www.FesliyanStudios.com.mp3',
-    'gameover': 'stinger-2021-08-17_-_8_Bit_Nostalgia_-_www.FesliyanStudios.com.mp3',
-    'success': 'stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3',
+    'home': 'music/2019-08-25_-_8bit-Smooth_Presentation_-_David_Fesliyan.mp3',
+    'adventure': 'music/2019-12-09_-_Retro_Forest_-_David_Fesliyan.mp3',
+    'boss': 'music/slow-2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3',
+    'epilogue': 'music/2021-08-17_-_8_Bit_Nostalgia_-_www.FesliyanStudios.com.mp3',
+    'gameover': 'music/stinger-2021-08-17_-_8_Bit_Nostalgia_-_www.FesliyanStudios.com.mp3',
+    'success': 'music/stinger-2021-10-19_-_Funny_Bit_-_www.FesliyanStudios.com.mp3',
 }
 
 if CUSTOM_DRAWING:
