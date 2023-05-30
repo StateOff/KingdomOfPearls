@@ -57,20 +57,26 @@ else:
 
 
 if WITH_MUSIC:
-    import pygame
-    pygame.init()
-    pygame.mixer.init()
+    try:
+        import pygame
+    except ModuleNotFoundError:
+        input("Music could not be loaded - pygame module missing.\n(Press Enter to continue without music)")
+        WITH_MUSIC = False
+    else:
+        pygame.init()
+        pygame.mixer.init()
 
-    def play_music(name, repeat=-1):
-        global music
-        if name == music:
-            return
-        music = name
+        def play_music(name, repeat=-1):
+            global music
+            if name == music:
+                return
+            music = name
 
-        pygame.mixer.music.stop()
-        pygame.mixer.music.load(MUSIC[name])
-        pygame.mixer.music.play(repeat)
-else:
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load(MUSIC[name])
+            pygame.mixer.music.play(repeat)
+
+if not WITH_MUSIC:
     def play_music(name, repeat=-1):
         pass
 
