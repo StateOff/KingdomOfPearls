@@ -6,9 +6,6 @@ on:
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
-env:
-  APPNAME: KingdomOfPearls
-
 jobs:
 
   createrelease:
@@ -43,15 +40,15 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-                pyinstaller -F -w -n $APPNAME main.py &&
+                pyinstaller -F -w -n KingdomOfPearls main.py &&
                 cd dist/ &&
-                zip -r9 $APPNAME $APPNAME.app/
-            OUT_FILE_NAME: $APPNAME.zip
+                zip -r9 KingdomOfPearls KingdomOfPearls.app/
+            OUT_FILE_NAME: KingdomOfPearls.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -w -n $APPNAME main.py
-            OUT_FILE_NAME: $APPNAME.exe
+            CMD_BUILD: pyinstaller -F -w -n KingdomOfPearls main.py
+            OUT_FILE_NAME: KingdomOfPearls.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
     - uses: actions/checkout@v1
