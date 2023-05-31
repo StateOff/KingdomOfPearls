@@ -42,13 +42,16 @@ jobs:
             CMD_BUILD: >
                 pyinstaller -F -w -n KingdomOfPearls main.py &&
                 cd dist/ &&
-                zip -r9 KingdomOfPearls KingdomOfPearls.app/
-            OUT_FILE_NAME: KingdomOfPearls.zip
+                zip -r9 KingdomOfPearls KingdomOfPearls.app/ ../music/
+            OUT_FILE_NAME: KingdomOfPearls_macOS.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -w -n KingdomOfPearls main.py
-            OUT_FILE_NAME: KingdomOfPearls.exe
+            CMD_BUILD: >
+                pyinstaller -F -w -n KingdomOfPearls main.py &&
+                cd dist/ &&
+                zip -r9 KingdomOfPearls KingdomOfPearls.exe ../music/
+            OUT_FILE_NAME: KingdomOfPearls_Windows.zip
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
     - uses: actions/checkout@v1
