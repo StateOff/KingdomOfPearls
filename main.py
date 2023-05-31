@@ -66,9 +66,9 @@ if WITH_MUSIC:
         pygame.init()
         pygame.mixer.init()
 
-        def play_music(name, repeat=-1):
+        def play_music(name, repeat=-1, force=False):
             global music
-            if name == music:
+            if name == music and not force:
                 return
             music = name
 
@@ -77,7 +77,7 @@ if WITH_MUSIC:
             pygame.mixer.music.play(repeat)
 
 if not WITH_MUSIC:
-    def play_music(name, repeat=-1):
+    def play_music(name, repeat=-1, force=False):
         pass
 
 # -----------------------------------------------------------------------------
@@ -1197,7 +1197,7 @@ def main_menu():
             try:
                 loop()
             except GameEnded:
-                play_music('home')
+                play_music('home', force=True)
                 pass
 
 
@@ -2166,8 +2166,17 @@ def add_map_location(cur_loc, pos, tiles, handled_locations):
         add_map_location(loc, new_pos, tiles, handled_locations)
 
 
+class InvalidSelection(Exception):
+    pass
 
-def get_main_options(with_new_game=False, with_save=True):
+class GameEnded(Exception):
+    pass
+
+
+def raise_game_ended():
+    raise GameEnded
+
+def get_main_options(with_new_game=False, with_save=True, sys_exit=True):
     options = [
         SEPARATOR_OPTIONS,
     ]
@@ -2181,9 +2190,12 @@ def get_main_options(with_new_game=False, with_save=True):
             ('SAVE', f'{S_SAVE} [SAVE] game', lambda: save())
         )
 
+    quit_cb = lambda: sys.exit(0)
+    if not sys_exit:
+        quit_cb = raise_game_ended
     return options + [
         ('LOAD', f'{S_LOAD} [LOAD] game', lambda: load(), lambda: save_exists(), True),
-        ('QUIT', f'{S_QUIT}   [QUIT] game', lambda: sys.exit(0)),
+        ('QUIT', f'{S_QUIT}   [QUIT] game', quit_cb),
     ]
 
 def get_character_options():
@@ -2195,11 +2207,6 @@ def get_character_options():
 
     return options
 
-class InvalidSelection(Exception):
-    pass
-
-class GameEnded(Exception):
-    pass
 
 def get_action(options, event="", question="What would you like to do?", with_status=True):
     if len(backpack) > backpack_size:
@@ -2250,7 +2257,7 @@ def get_action(options, event="", question="What would you like to do?", with_st
 
 def loop():
     while True:
-        options = LOCATION_OPTIONS[location] + get_character_options() + get_main_options()
+        options = LOCATION_OPTIONS[location] + get_character_options() + get_main_options(sys_exit=False)
         try:
             action = get_action(options)
             # Display error on secret option selection
