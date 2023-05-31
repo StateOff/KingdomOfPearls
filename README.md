@@ -1,5 +1,6 @@
 # KingdomOfPearls
-Text based Adventure Roleplaying Game
+Text based Adventure Roleplaying Game.
+Started as python excercise with my son and became our pet project for our adventures and ideas.
 
 # Developer installation
 
