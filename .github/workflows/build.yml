@@ -40,7 +40,7 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-                pyinstaller -F -w -n KingdomOfPearls main.py &&
+                pyinstaller -F -n KingdomOfPearls main.py &&
                 cd dist/ &&
                 mv ../music/ . &&
                 zip -r9 KingdomOfPearls_MacOS KingdomOfPearls.app/ music/
@@ -50,7 +50,7 @@ jobs:
             TARGET: windows
             SHELL: pwsh
             CMD_BUILD: >
-                pyinstaller -F -w -n KingdomOfPearls main.py &&
+                pyinstaller -F -n KingdomOfPearls main.py &&
                 cd dist/ &&
                 Compress-Archive -DestinationPath KingdomOfPearls_Windows.zip -Path KingdomOfPearls.exe,../music/
             OUT_FILE_NAME: KingdomOfPearls_Windows.zip
@@ -58,7 +58,7 @@ jobs:
           - os: ubuntu-20.04
             TARGET: linux
             CMD_BUILD: >
-              pyinstaller -F -w -n KingdomOfPearls main.py &&
+              pyinstaller -F -n KingdomOfPearls main.py &&
               cd dist/ &&
                 mv ../music/ . &&
               zip -r9 KingdomOfPearls_Linux KingdomOfPearls music/
