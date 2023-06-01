@@ -43,8 +43,8 @@ jobs:
                 pyinstaller -F -n KingdomOfPearls main.py &&
                 cd dist/ &&
                 mv ../music/ . &&
-                zip -r9 KingdomOfPearls_MacOS_${{ github.ref }} KingdomOfPearls.app/ music/
-            OUT_FILE_NAME: KingdomOfPearls_macOS_${{ github.ref }}.zip
+                zip -r9 KingdomOfPearls_MacOS_${{ github.ref_name }} KingdomOfPearls.app/ music/
+            OUT_FILE_NAME: KingdomOfPearls_macOS_${{ github.ref_name }}.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
@@ -52,8 +52,8 @@ jobs:
             CMD_BUILD: >
                 pyinstaller -F -n KingdomOfPearls main.py &&
                 cd dist/ &&
-                Compress-Archive -DestinationPath KingdomOfPearls_Windows_${{ github.ref }}.zip -Path KingdomOfPearls.exe,../music/
-            OUT_FILE_NAME: KingdomOfPearls_Windows_${{ github.ref }}.zip
+                Compress-Archive -DestinationPath KingdomOfPearls_Windows_${{ github.ref_name }}.zip -Path KingdomOfPearls.exe,../music/
+            OUT_FILE_NAME: KingdomOfPearls_Windows_${{ github.ref_name }}.zip
             ASSET_MIME: application/zip
           - os: ubuntu-20.04
             TARGET: linux
@@ -61,8 +61,8 @@ jobs:
               pyinstaller -F -n KingdomOfPearls main.py &&
               cd dist/ &&
                 mv ../music/ . &&
-              zip -r9 KingdomOfPearls_Linux_${{ github.ref }} KingdomOfPearls music/
-            OUT_FILE_NAME: KingdomOfPearls_Linux_${{ github.ref }}.zip
+              zip -r9 KingdomOfPearls_Linux_${{ github.ref_name }} KingdomOfPearls music/
+            OUT_FILE_NAME: KingdomOfPearls_Linux_${{ github.ref_name }}.zip
             ASSET_MIME: application/zip
     steps:
     - uses: actions/checkout@v1
