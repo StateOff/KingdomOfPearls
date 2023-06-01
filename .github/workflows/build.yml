@@ -47,10 +47,11 @@ jobs:
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
+            SHELL: pwsh
             CMD_BUILD: >
                 pyinstaller -F -w -n KingdomOfPearls main.py &&
                 cd dist/ &&
-                zip -r9 KingdomOfPearls_Windows KingdomOfPearls.exe ../music/
+                Compress-Archive -DestinationPath KingdomOfPearls_Windows.zip -Path KingdomOfPearls.exe,../music/
             OUT_FILE_NAME: KingdomOfPearls_Windows.zip
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
