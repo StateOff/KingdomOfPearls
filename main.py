@@ -83,7 +83,7 @@ if not WITH_MUSIC:
 # -----------------------------------------------------------------------------
 # -- DEBUG
 # -----------------------------------------------------------------------------
-VERSION = "0.23a"
+VERSION = "0.24a"
 DEBUG_START_LEVEL = 1
 DEBUG_SHOW_COMPLETE_MAP = False #True
 DEBUG_LARGE_INVENTORY = False #True
